@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Symfony with LOUTCHEE — Plateforme d'apprentissage</title>
+<title>SymfonyLearn — Plateforme d'apprentissage</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Sora:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
 /* ===== RESET & BASE ===== */
@@ -510,7 +510,7 @@ pre.code-block {
   <div id="sidebar-logo">
     <div class="logo-icon">⚡</div>
     <div>
-      <div class="logo-text">Symfony with LOUTCHEE</div>
+      <div class="logo-text">SymfonyLearn</div>
       <div class="logo-badge">EHEIO 2026</div>
     </div>
   </div>
@@ -1864,7 +1864,8 @@ let state = {
   examMode: 'qcm',
   pdfAnswers: {},
   pdfSubmitted: false,
-  reelAnswers: {}
+  reelAnswers: {},
+  plusAnswers: {}
 };
 
 // ===== NAVIGATION =====
@@ -2962,8 +2963,8 @@ function buildExam() {
     return `
 <div class="exam-hero">
   <h1 class="exam-title">📋 Examen Blanc Symfony</h1>
-  <p class="exam-sub">3 modes d'entraînement — EHEIO 2026</p>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;max-width:640px;margin:0 auto 1.5rem">
+  <p class="exam-sub">4 modes d'entraînement — EHEIO 2026</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:640px;margin:0 auto 1rem">
     <div onclick="startExamMode('qcm')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;cursor:pointer;transition:all .18s;text-align:center" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:26px;margin-bottom:6px">🎯</div>
       <div style="font-family:var(--display);font-size:13px;font-weight:600;margin-bottom:3px">Mode QCM</div>
@@ -2981,17 +2982,25 @@ function buildExam() {
       <div style="font-family:var(--display);font-size:13px;font-weight:600;margin-bottom:3px">Examen Réel</div>
       <div style="font-size:11px;color:var(--text3)">Questions des slides<br>Doctrine + DI + Sécurité</div>
     </div>
+    <div onclick="startExamMode('plus')" style="background:var(--surface);border:2px solid var(--teal);border-radius:var(--radius-lg);padding:1rem;cursor:pointer;transition:all .18s;text-align:center;position:relative" onmouseover="this.style.borderColor='#2dd4a8'" onmouseout="this.style.borderColor='var(--teal)'">
+      <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--teal);color:#0d0f18;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap">🚀 HORS PDF</div>
+      <div style="font-size:26px;margin-bottom:6px">✨</div>
+      <div style="font-family:var(--display);font-size:13px;font-weight:600;margin-bottom:3px">Nouvelles Questions</div>
+      <div style="font-size:11px;color:var(--text3)">Questions possibles<br>non dans le PDF</div>
+    </div>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:400px;margin:0 auto;text-align:center">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:520px;margin:0 auto;text-align:center">
     <div><div style="font-size:1.3rem;font-weight:700;color:var(--teal)">${Object.values(MODULES).reduce((s,m)=>s+m.quiz.length,0)}</div><div style="font-size:11px;color:var(--text3)">QCM</div></div>
     <div><div style="font-size:1.3rem;font-weight:700;color:var(--purple)">${EXAM_PDF.length}</div><div style="font-size:11px;color:var(--text3)">Questions PDF</div></div>
     <div><div style="font-size:1.3rem;font-weight:700;color:var(--coral)">${EXAM_REEL.length}</div><div style="font-size:11px;color:var(--text3)">Examen Réel</div></div>
+    <div><div style="font-size:1.1rem;font-weight:700;color:var(--teal)">${EXAM_PLUS.length}</div><div style="font-size:11px;color:var(--text3)">Nouvelles Qs</div></div>
   </div>
 </div>`;
   }
   if (state.examMode === 'qcm') return buildExamQCM();
   if (state.examMode === 'pdf') return buildExamPDF();
-  return buildExamReel();
+  if (state.examMode === 'reel') return buildExamReel();
+  return buildExamPlus();
 }
 
 // ===== MODE QCM (ancien) =====
@@ -3369,6 +3378,219 @@ function buildExamReelResults() {
   return `<div style="max-width:720px;margin:0 auto">${header}<div class="review-list">${html}</div></div>`;
 }
 
+// ===== EXAM PLUS — Nouvelles questions (hors PDF) =====
+const EXAM_PLUS = [
+  // ROUTING
+  { section: 'Contrôleurs et Routing', type: 'open',
+    q: 'Quelle commande Symfony génère automatiquement un contrôleur ? Quel est le format du nom attendu ?',
+    ans: 'php bin/console make:controller NomController\nLe nom doit être en PascalCase (ex: ProductController). Génère la classe PHP + template Twig.',
+    hint: 'make:controller NomController — PascalCase obligatoire.' },
+  { section: 'Contrôleurs et Routing', type: 'dropdown',
+    q: 'Un contrôleur Symfony peut retourner n\'importe quel type de valeur (string, int, array...)',
+    opts: ['Vrai', 'Faux'], ans: 1,
+    hint: 'Faux. Un contrôleur DOIT retourner un objet Response (HttpFoundation\\Response).' },
+  { section: 'Contrôleurs et Routing', type: 'open',
+    q: 'Comment définir une valeur par défaut pour un paramètre de route ? Donner un exemple.',
+    ans: '#[Route(\'/articles/{page}\', defaults: [\'page\' => 1])]\nOu argument PHP : public function list(int $page = 1): Response {}',
+    hint: 'defaults: [\'param\' => valeur] dans #[Route] ou valeur par défaut PHP sur l\'argument.' },
+  { section: 'Contrôleurs et Routing', type: 'checkbox',
+    q: 'Parmi ces éléments, lesquels peuvent être configurés dans l\'attribut #[Route] ?',
+    opts: ['name', 'methods', 'requirements', 'priority', 'defaults', 'template', 'cache'],
+    ans: [0,1,2,3,4],
+    hint: 'name, methods, requirements, priority, defaults sont valides. template et cache n\'existent pas dans #[Route].' },
+  { section: 'Contrôleurs et Routing', type: 'open',
+    q: 'Comment récupérer les paramètres GET d\'une URL (?page=2&sort=asc) dans un contrôleur ?',
+    ans: '$request->query->get(\'page\')         // un seul\n$request->query->get(\'sort\', \'asc\')   // avec défaut\n$request->query->all()               // tous',
+    hint: '$request->query->get(\'param\') pour les paramètres GET.' },
+  { section: 'Contrôleurs et Routing', type: 'dropdown',
+    q: 'On peut placer l\'attribut #[Route] directement sur la classe contrôleur pour définir un préfixe d\'URL',
+    opts: ['Vrai', 'Faux'], ans: 0,
+    hint: 'Vrai. #[Route(\'/prefix\')] sur la classe = préfixe pour toutes les méthodes du contrôleur.' },
+  { section: 'Contrôleurs et Routing', type: 'open',
+    q: 'Comment générer une URL dans un contrôleur PHP à partir d\'un nom de route ?',
+    ans: '$this->generateUrl(\'app_user_show\', [\'id\' => 42])\n// Résultat : "/users/42"',
+    hint: '$this->generateUrl(\'nom_route\', [params])' },
+
+  // TWIG
+  { section: 'Twig', type: 'open',
+    q: 'Comment générer une URL relative vers une route avec paramètre en Twig ?',
+    ans: '{{ path(\'app_user_show\', {id: user.id}) }}\n// Résultat : /users/42',
+    hint: '{{ path(\'nom_route\', {param: valeur}) }}' },
+  { section: 'Twig', type: 'dropdown',
+    q: 'En Twig, {% %} permet d\'afficher une variable',
+    opts: ['Vrai', 'Faux'], ans: 1,
+    hint: 'Faux. {% %} = instructions (if, for, block...). Pour afficher : {{ variable }}.' },
+  { section: 'Twig', type: 'open',
+    q: 'Comment appliquer des filtres Twig ? Donner 3 exemples utiles.',
+    ans: '{{ user.name | upper }}          // MAJUSCULES\n{{ price | number_format(2) }}   // 1 234.56\n{{ date | date(\'d/m/Y\') }}      // 04/06/2026\n{{ items | length }}             // nombre\n{{ text | lower }}               // minuscules',
+    hint: '| upper, | lower, | number_format, | date, | length — symbole | (pipe).' },
+  { section: 'Twig', type: 'open',
+    q: 'Comment afficher le contenu du bloc parent dans un bloc enfant en Twig ?',
+    ans: '{% block stylesheets %}\n    {{ parent() }}  // inclut le CSS parent\n    // nouveau CSS ajouté\n{% endblock %}',
+    hint: '{{ parent() }} à l\'intérieur d\'un bloc enfant.' },
+  { section: 'Twig', type: 'checkbox',
+    q: 'Parmi ces syntaxes Twig, lesquelles sont correctes ?',
+    opts: ['{{ user.name }}','<? echo $user->name ?>','{% if user.isAdmin %}...{% endif %}','{# Commentaire #}','{% for item in items %}...{% endfor %}','[[ variable ]]','{% extends \'base.html.twig\' %}'],
+    ans: [0,2,3,4,6],
+    hint: '{{ }}, {% %}, {# #} sont les 3 syntaxes Twig. <? ?> est PHP, [[ ]] n\'existe pas.' },
+  { section: 'Twig', type: 'open',
+    q: 'Comment vérifier un rôle et afficher conditionnellement du contenu en Twig ?',
+    ans: '{% if is_granted(\'ROLE_ADMIN\') %}\n    <a href="/admin">Admin</a>\n{% endif %}\n{% if app.user %}\n    {{ app.user.email }}\n{% else %}\n    <a href="{{ path(\'app_login\') }}">Se connecter</a>\n{% endif %}',
+    hint: '{% if is_granted(\'ROLE_ADMIN\') %} + app.user.' },
+
+  // INJECTION DE DEPENDANCES
+  { section: 'Injection de dépendances en Symfony', type: 'open',
+    q: 'Quelle est la différence entre autowire: true et autoconfigure: true ?',
+    ans: 'autowire: true → injecte auto les dépendances via type hints.\nautoconfigure: true → configure auto les tags (EventListener, Command...). Évite de déclarer les tags manuellement.',
+    hint: 'autowire = injection auto. autoconfigure = tags auto.' },
+  { section: 'Injection de dépendances en Symfony', type: 'dropdown',
+    q: 'Il est recommandé d\'utiliser $container->get(MonService::class) pour récupérer un service',
+    opts: ['Vrai', 'Faux'], ans: 1,
+    hint: 'Faux. $container->get() est à éviter (Service Locator anti-pattern). Utiliser l\'autowiring.' },
+  { section: 'Injection de dépendances en Symfony', type: 'open',
+    q: 'Comment créer et utiliser des paramètres de conteneur ? Donner un exemple.',
+    ans: '# services.yaml\nparameters:\n    app.admin_email: admin@example.com\n\n# Accès en PHP :\n$this->getParameter(\'app.admin_email\');\n# Accès en YAML :\n$email: \'%app.admin_email%\'',
+    hint: 'Définis sous parameters:, accès avec %nom% en YAML ou getParameter() en PHP.' },
+  { section: 'Injection de dépendances en Symfony', type: 'checkbox',
+    q: 'Parmi ces affirmations sur l\'Injection de Dépendances, lesquelles sont VRAIES ?',
+    opts: ['L\'injection par constructeur = Injection de Dépendances','$container->get() est la bonne pratique','L\'autowiring fonctionne via les type hints PHP','debug:container liste les services','Toutes les classes PHP sont automatiquement services','La DI facilite les tests unitaires','services.yaml = fichier de config du container'],
+    ans: [0,2,3,5,6],
+    hint: 'Vraies: injection constructeur, autowiring via type hints, debug:container, DI=tests, services.yaml. Faux: $container->get() à éviter, pas toutes les classes sont services.' },
+
+  // FORMULAIRES
+  { section: 'Les Formulaires', type: 'open',
+    q: 'Quelle commande génère automatiquement une classe FormType ?',
+    ans: 'php bin/console make:form NomType\nExemple : php bin/console make:form UserType\nGénère src/Form/UserType.php avec buildForm() et configureOptions().',
+    hint: 'php bin/console make:form NomType' },
+  { section: 'Les Formulaires', type: 'open',
+    q: 'À quoi sert l\'option "mapped: false" dans un champ de formulaire ?',
+    ans: 'mapped: false = le champ n\'est PAS lié à une propriété de l\'entité.\nExemple : confirmPassword, acceptCGU...\nRécupérer manuellement : $form->get(\'confirmPassword\')->getData();',
+    hint: 'mapped: false = champ non lié à l\'entité. Ex: confirmPassword.' },
+  { section: 'Les Formulaires', type: 'dropdown',
+    q: 'handleRequest() est obligatoire pour traiter un formulaire soumis en Symfony',
+    opts: ['Vrai', 'Faux'], ans: 0,
+    hint: 'Vrai. handleRequest($request) lie les données POST au formulaire. Sans lui, isSubmitted() retourne false.' },
+  { section: 'Les Formulaires', type: 'checkbox',
+    q: 'Parmi ces contraintes de validation, lesquelles existent en Symfony ?',
+    opts: ['#[Assert\\NotBlank]','#[Assert\\Email]','#[Assert\\Required]','#[Assert\\Length(min: 8)]','#[Assert\\Regex(pattern: \'/[A-Z]/\')]','#[Assert\\Filled]','#[Assert\\Url]','#[Assert\\PositiveOrZero]'],
+    ans: [0,1,3,4,6,7],
+    hint: 'NotBlank, Email, Length, Regex, Url, PositiveOrZero existent. Required et Filled n\'existent PAS.' },
+  { section: 'Les Formulaires', type: 'open',
+    q: 'Comment afficher les messages flash (addFlash) en Twig ?',
+    ans: '// Contrôleur :\n$this->addFlash(\'success\', \'Enregistrement réussi !\');\n\n// Twig :\n{% for label, messages in app.flashes %}\n  {% for message in messages %}\n    <div class="alert alert-{{ label }}">{{ message }}</div>\n  {% endfor %}\n{% endfor %}',
+    hint: '$this->addFlash(\'type\', \'message\') + app.flashes en Twig.' },
+
+  // DOCTRINE
+  { section: 'Les bases de données - Doctrine', type: 'open',
+    q: 'Comment supprimer puis recréer la base de données ?',
+    ans: 'php bin/console doctrine:database:drop --force\nphp bin/console doctrine:database:create\nphp bin/console doctrine:migrations:migrate',
+    hint: 'drop --force → create → migrations:migrate' },
+  { section: 'Les bases de données - Doctrine', type: 'open',
+    q: 'Comment écrire une méthode personnalisée dans un Repository avec des critères complexes ?',
+    ans: 'public function findExpensive(float $min): array\n{\n    return $this->createQueryBuilder(\'p\')\n        ->where(\'p.price >= :price\')\n        ->setParameter(\'price\', $min)\n        ->orderBy(\'p.price\', \'DESC\')\n        ->getQuery()\n        ->getResult();\n}',
+    hint: 'createQueryBuilder() + where() + setParameter() + getQuery() + getResult().' },
+  { section: 'Les bases de données - Doctrine', type: 'dropdown',
+    q: '#[ORM\\Column(nullable: true)] signifie que la colonne peut contenir des valeurs NULL en BDD',
+    opts: ['Vrai', 'Faux'], ans: 0,
+    hint: 'Vrai. nullable: true → colonne accepte NULL. Par défaut nullable: false.' },
+  { section: 'Les bases de données - Doctrine', type: 'open',
+    q: 'Quelle est la différence entre findBy() et findOneBy() ?',
+    ans: 'findBy([\'status\' => \'active\'], [\'createdAt\' => \'DESC\'], 10)\n→ Retourne un TABLEAU d\'objets (plusieurs résultats)\n\nfindOneBy([\'email\' => \'user@test.com\'])\n→ Retourne UN objet ou NULL',
+    hint: 'findBy() → tableau. findOneBy() → un objet ou null.' },
+  { section: 'Les bases de données - Doctrine', type: 'open',
+    q: 'Expliquer la relation ManyToMany et comment Doctrine gère la table intermédiaire.',
+    ans: 'ManyToMany = N entités ↔ N entités.\nEx: Produit peut avoir plusieurs Catégories, une Catégorie plusieurs Produits.\n\nDoctrine crée automatiquement la table intermédiaire (product_categories) avec 2 colonnes (product_id, category_id). Pas besoin de la créer manuellement.',
+    hint: 'ManyToMany = N↔N. Doctrine crée auto la table intermédiaire via #[ORM\\JoinTable].' },
+
+  // SECURITE
+  { section: 'La sécurité', type: 'open',
+    q: 'Dans quel fichier se configure la sécurité ? Quelles sont les 4 sections principales ?',
+    ans: 'Fichier : config/packages/security.yaml\n4 sections :\n1. password_hashers : algorithme de hachage\n2. providers : comment charger l\'utilisateur\n3. firewalls : zones de sécurité\n4. access_control : restrictions par URL/rôle',
+    hint: 'config/packages/security.yaml → password_hashers, providers, firewalls, access_control.' },
+  { section: 'La sécurité', type: 'open',
+    q: 'Comment hasher un mot de passe manuellement ? Quelle interface utiliser ?',
+    ans: '// Injecter :\nprivate UserPasswordHasherInterface $hasher\n\n// Utiliser :\n$hash = $this->hasher->hashPassword($user, $plainPassword);\n$user->setPassword($hash);\n\n// CLI :\nphp bin/console security:hash-password',
+    hint: 'UserPasswordHasherInterface + hashPassword($user, $plain).' },
+  { section: 'La sécurité', type: 'dropdown',
+    q: 'L\'ordre des firewalls dans security.yaml n\'a pas d\'importance',
+    opts: ['Vrai', 'Faux'], ans: 1,
+    hint: 'Faux. TRÈS IMPORTANT. La requête est gérée par le PREMIER firewall qui correspond. Générique en DERNIER.' },
+  { section: 'La sécurité', type: 'open',
+    q: 'Comment utiliser #[IsGranted] pour protéger une méthode de contrôleur ?',
+    ans: 'use Symfony\\Component\\Security\\Http\\Attribute\\IsGranted;\n\n#[IsGranted(\'ROLE_ADMIN\')]\npublic function adminPanel(): Response {}\n\n// Si pas le rôle → 403 Forbidden automatique.',
+    hint: '#[IsGranted(\'ROLE_ADMIN\')] sur la méthode → 403 si pas le rôle.' },
+  { section: 'La sécurité', type: 'checkbox',
+    q: 'Parmi ces méthodes, lesquelles sont requises par UserInterface ?',
+    opts: ['getUserIdentifier()','getRoles()','getEmail()','eraseCredentials()','getPassword()','getName()','isAdmin()'],
+    ans: [0,1,3],
+    hint: 'UserInterface requiert : getUserIdentifier(), getRoles(), eraseCredentials(). getPassword() vient de PasswordAuthenticatedUserInterface.' },
+  { section: 'La sécurité', type: 'open',
+    q: 'Comment configurer la déconnexion (logout) dans security.yaml ?',
+    ans: 'firewalls:\n    main:\n        logout:\n            path: app_logout    # route de déconnexion\n            target: app_login   # redirect après\n\n// Contrôleur (peut être vide) :\n#[Route(\'/logout\', name: \'app_logout\')]\npublic function logout(): void {}\n\n// Twig :\n{{ path(\'app_logout\') }}',
+    hint: 'logout: path + target dans security.yaml. Contrôleur peut être vide (firewall intercepte).' }
+];
+
+// ===== BUILD EXAM PLUS =====
+function buildExamPlus() {
+  if (state.pdfSubmitted && state.examMode === 'plus') return buildExamPlusResults();
+  const sections = [...new Set(EXAM_PLUS.map(q => q.section))];
+  let html = `<div style="max-width:720px;margin:0 auto">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem">
+    <button class="btn-secondary" onclick="state.examStarted=false;renderContent()" style="padding:6px 12px;font-size:12px">← Retour</button>
+    <div style="flex:1">
+      <div style="font-family:var(--display);font-weight:700;font-size:15px">✨ Nouvelles Questions — Hors PDF</div>
+      <div style="font-size:12px;color:var(--text3)">Questions possibles non présentes dans l'examen blanc original</div>
+    </div>
+    <div style="background:rgba(45,212,168,0.12);border:1px solid rgba(45,212,168,.2);color:var(--teal);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600">${EXAM_PLUS.length} questions</div>
+  </div>`;
+  sections.forEach(section => {
+    const sQs = EXAM_PLUS.filter(q => q.section === section);
+    html += `<div style="margin-bottom:2rem"><div style="display:flex;justify-content:space-between;padding:0.5rem 0.75rem;background:rgba(45,212,168,0.08);border:1px solid rgba(45,212,168,0.2);border-radius:var(--radius);margin-bottom:1rem"><div style="font-size:13px;font-weight:600;color:var(--teal)">${section}</div><div style="font-size:11px;color:var(--text3)">${sQs.length} questions</div></div>`;
+    sQs.forEach(q => { html += buildPlusQ(q, EXAM_PLUS.indexOf(q)); });
+    html += `</div>`;
+  });
+  html += `<div style="text-align:center;padding:2rem 0"><button onclick="submitPlusExam()" class="btn-go" style="font-size:15px;padding:14px 40px;background:var(--teal);color:#0d0f18">✅ Soumettre et voir la correction</button></div></div>`;
+  return html;
+}
+
+function buildPlusQ(q, idx) {
+  if (q.type === 'open') {
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:10px"><div style="font-size:14px;font-weight:500;line-height:1.5;margin-bottom:1rem">${q.q}</div><textarea id="plus_${idx}" rows="4" oninput="savePlusAnswer(${idx},this.value)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px;color:var(--text);font-family:var(--sans);font-size:13px;resize:vertical;line-height:1.6">${state.plusAnswers[idx]||''}</textarea></div>`;
+  }
+  if (q.type === 'dropdown') {
+    const cur = state.plusAnswers[idx];
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:10px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.75rem"><div style="font-size:14px;font-weight:500;line-height:1.5;flex:1">${q.q}</div><span style="font-size:11px;background:var(--bg4);color:var(--text3);padding:3px 8px;border-radius:6px;white-space:nowrap">⊙ Dropdown</span></div><select onchange="savePlusAnswer(${idx},parseInt(this.value))" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-family:var(--sans);font-size:13px;width:200px"><option value="-1" ${cur===undefined?'selected':''}>Sélectionner</option>${q.opts.map((o,i)=>`<option value="${i}" ${cur===i?'selected':''}>${o}</option>`).join('')}</select></div>`;
+  }
+  if (q.type === 'checkbox') {
+    const cur = state.plusAnswers[idx]||[];
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:10px"><div style="font-size:14px;font-weight:500;line-height:1.5;margin-bottom:1rem">${q.q}</div><div style="display:flex;flex-direction:column;gap:8px">${q.opts.map((o,i)=>`<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);font-size:13px"><input type="checkbox" ${cur.includes(i)?'checked':''} onchange="togglePlusCheckbox(${idx},${i},this.checked)" style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer"><span>${o}</span></label>`).join('')}</div></div>`;
+  }
+  return '';
+}
+
+function buildExamPlusResults() {
+  let scored=0, html='';
+  const sections=[...new Set(EXAM_PLUS.map(q=>q.section))];
+  sections.forEach(section=>{
+    const sQs=EXAM_PLUS.filter(q=>q.section===section);
+    html+=`<div style="margin-bottom:2rem"><div style="font-size:13px;font-weight:600;color:var(--teal);padding:.5rem 0;border-bottom:1px solid var(--border);margin-bottom:1rem">${section}</div>`;
+    sQs.forEach(q=>{
+      const idx=EXAM_PLUS.indexOf(q),ua=state.plusAnswers[idx];
+      let ok=false,ud='',cd='';
+      if(q.type==='open'){ok=ua&&ua.trim().length>5;ud=ua||'(pas de réponse)';cd=q.ans;}
+      else if(q.type==='dropdown'){ok=ua===q.ans;ud=ua!==undefined&&ua>=0?q.opts[ua]:'(pas de réponse)';cd=q.opts[q.ans];}
+      else if(q.type==='checkbox'){const a=ua||[];ok=JSON.stringify([...a].sort())===JSON.stringify([...q.ans].sort());ud=a.length?a.map(i=>q.opts[i]).join(', '):'(pas de réponse)';cd=q.ans.map(i=>q.opts[i]).join(', ');}
+      if(ok)scored++;
+      html+=`<div style="background:var(--surface);border:1px solid ${ok?'#2dd4a830':'#f0606030'};border-left:3px solid ${ok?'#2dd4a8':'#f06060'};border-radius:var(--radius);padding:1rem;margin-bottom:8px"><div style="font-size:13px;font-weight:500;margin-bottom:8px;line-height:1.4">${ok?'✅':'❌'} ${q.q}</div>${q.type==='open'?`<div style="font-size:11px;color:var(--text3);margin-bottom:3px">Votre réponse :</div><div style="font-size:12px;background:var(--bg3);border-radius:6px;padding:8px;margin-bottom:8px;white-space:pre-wrap;line-height:1.6">${ud||'<em>Pas de réponse</em>'}</div><div style="font-size:11px;color:#2dd4a8;margin-bottom:3px">✅ Correction :</div><div style="font-size:12px;background:rgba(45,212,168,0.08);border:1px solid rgba(45,212,168,0.2);border-radius:6px;padding:8px;white-space:pre-wrap;line-height:1.6;color:var(--text)">${cd}</div>`:`<div style="font-size:12px"><span style="color:var(--text3)">Votre réponse : </span><span style="color:${ok?'#2dd4a8':'#f06060'}">${ud}</span>${!ok?` <span style="color:var(--text3)"> | Bonne : </span><span style="color:#2dd4a8">${cd}</span>`:''}</div>`}<div style="font-size:11px;color:var(--text3);margin-top:6px;font-style:italic">💡 ${q.hint}</div></div>`;
+    });
+    html+=`</div>`;
+  });
+  const pct=Math.round(scored/EXAM_PLUS.length*100),clr=pct>=75?'#2dd4a8':pct>=50?'#f5c842':'#f06060';
+  return `<div style="max-width:720px;margin:0 auto"><div style="text-align:center;padding:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);margin-bottom:1.5rem"><div style="font-family:var(--display);font-size:2.5rem;font-weight:700;color:${clr}">${pct}%</div><div style="font-size:15px;font-weight:500;margin-bottom:4px">${scored}/${EXAM_PLUS.length} réussies</div><div style="font-size:13px;color:var(--text3);margin-bottom:1rem">${pct>=75?'🎉 Excellent !':pct>=50?'📚 Continuez !':'💪 Relisez les modules !'}</div><div style="display:flex;gap:8px;justify-content:center"><button class="btn-go" style="background:var(--teal);color:#0d0f18" onclick="startExamMode('plus')">Recommencer</button><button class="btn-secondary" onclick="state.examStarted=false;renderContent()">Choisir le mode</button></div></div><div class="review-list">${html}</div></div>`;
+}
+
+
+
 // ===== ACTIONS =====
 function setTab(t) { state.tab=t; state.quizIdx=0; state.quizAnswers=[]; state.quizDone=false; renderContent(); }
 function goLesson(i) { state.lessonIdx=i; renderContent(); window.scrollTo(0,0); }
@@ -3403,9 +3625,17 @@ function startExamMode(mode) {
   state.pdfAnswers = {};
   state.pdfSubmitted = false;
   state.reelAnswers = {};
+  state.plusAnswers = {};
   renderContent();
   window.scrollTo(0,0);
 }
+function savePlusAnswer(idx, val) { state.plusAnswers[idx] = val; }
+function togglePlusCheckbox(idx, optIdx, checked) {
+  if (!state.plusAnswers[idx]) state.plusAnswers[idx] = [];
+  if (checked) { if (!state.plusAnswers[idx].includes(optIdx)) state.plusAnswers[idx].push(optIdx); }
+  else { state.plusAnswers[idx] = state.plusAnswers[idx].filter(x => x !== optIdx); }
+}
+function submitPlusExam() { state.pdfSubmitted = true; renderContent(); window.scrollTo(0,0); }
 function saveReelAnswer(idx, val) { state.reelAnswers[idx] = val; }
 function toggleReelCheckbox(idx, optIdx, checked) {
   if (!state.reelAnswers[idx]) state.reelAnswers[idx] = [];

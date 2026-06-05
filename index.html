@@ -1,0 +1,2326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symfony with LOUTCHEE — Plateforme d'apprentissage</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Sora:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0e0f14;
+  --bg2: #13151d;
+  --bg3: #1a1d28;
+  --bg4: #222636;
+  --surface: #1e2130;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf0;
+  --text2: #8b8fa8;
+  --text3: #5a5e75;
+  --purple: #7c6ef7;
+  --purple-light: #a597ff;
+  --purple-bg: rgba(124,110,247,0.12);
+  --teal: #2dd4a8;
+  --teal-bg: rgba(45,212,168,0.1);
+  --coral: #f07a5a;
+  --coral-bg: rgba(240,122,90,0.1);
+  --amber: #f5c842;
+  --amber-bg: rgba(245,200,66,0.1);
+  --green: #5bdb8c;
+  --green-bg: rgba(91,219,140,0.1);
+  --red: #f06060;
+  --red-bg: rgba(240,96,96,0.1);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --display: 'Sora', sans-serif;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --sidebar: 260px;
+  --transition: 0.18s ease;
+}
+html { font-size: 15px; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.65;
+}
+button { cursor: pointer; font-family: var(--sans); }
+a { color: var(--purple-light); text-decoration: none; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+
+/* ===== LAYOUT ===== */
+#layout { display: flex; min-height: 100vh; }
+
+/* ===== SIDEBAR ===== */
+#sidebar {
+  width: var(--sidebar);
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  overflow-y: auto;
+  transition: transform var(--transition);
+}
+#sidebar-logo {
+  padding: 1.4rem 1.2rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  width: 34px; height: 34px;
+  background: var(--purple-bg);
+  border: 1px solid rgba(124,110,247,0.3);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+}
+.logo-text { font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--text); }
+.logo-badge {
+  font-size: 9px; background: var(--purple-bg); color: var(--purple-light);
+  border: 1px solid rgba(124,110,247,0.25); border-radius: 4px; padding: 2px 5px;
+  font-weight: 600; letter-spacing: 0.04em; margin-top: 1px;
+}
+
+#sidebar-nav { padding: 0.8rem 0.6rem; flex: 1; }
+.nav-section-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+  color: var(--text3); text-transform: uppercase;
+  padding: 0.6rem 0.6rem 0.3rem;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-bottom: 2px;
+  font-size: 13.5px;
+  color: var(--text2);
+  border: 1px solid transparent;
+  user-select: none;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: var(--purple-bg); color: var(--purple-light); border-color: rgba(124,110,247,0.2); }
+.nav-icon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto; font-size: 10px; font-weight: 600;
+  background: var(--bg4); color: var(--text2);
+  border-radius: 20px; padding: 1px 7px;
+}
+
+#sidebar-footer {
+  padding: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+.progress-mini { font-size: 11px; color: var(--text3); margin-bottom: 6px; display: flex; justify-content: space-between; }
+.progress-bar-wrap { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--teal)); border-radius: 2px; transition: width 0.5s ease; }
+
+/* ===== MAIN ===== */
+#main {
+  margin-left: var(--sidebar);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ===== TOPBAR ===== */
+#topbar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky; top: 0; z-index: 50;
+}
+#search-wrap {
+  flex: 1; max-width: 360px;
+  position: relative;
+}
+#search-wrap span { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; }
+#search {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 7px 12px 7px 32px;
+  color: var(--text); font-size: 13px; font-family: var(--sans);
+  transition: border-color var(--transition);
+}
+#search:focus { outline: none; border-color: rgba(124,110,247,0.4); }
+#search::placeholder { color: var(--text3); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.btn-outline {
+  background: none; border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 6px 14px;
+  font-size: 12.5px; color: var(--text2);
+  transition: all var(--transition);
+}
+.btn-outline:hover { border-color: var(--purple); color: var(--purple-light); background: var(--purple-bg); }
+.btn-primary {
+  background: var(--purple); border: none;
+  border-radius: var(--radius); padding: 7px 16px;
+  font-size: 13px; color: white; font-weight: 500;
+  transition: all var(--transition);
+}
+.btn-primary:hover { background: var(--purple-light); transform: translateY(-1px); }
+#mobile-toggle { display: none; background: none; border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 10px; color: var(--text2); font-size: 16px; }
+
+/* ===== CONTENT ===== */
+#content { padding: 1.5rem; flex: 1; }
+
+/* ===== HOME PAGE ===== */
+.home-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem 2rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.home-hero::before {
+  content: '';
+  position: absolute; top: -60px; right: -60px;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(124,110,247,0.18), transparent 70%);
+  pointer-events: none;
+}
+.home-hero::after {
+  content: '';
+  position: absolute; bottom: -40px; left: 30%;
+  width: 160px; height: 160px;
+  background: radial-gradient(circle, rgba(45,212,168,0.1), transparent 70%);
+  pointer-events: none;
+}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--purple-bg); border: 1px solid rgba(124,110,247,0.25);
+  color: var(--purple-light); border-radius: 20px;
+  padding: 4px 12px; font-size: 12px; font-weight: 500;
+  margin-bottom: 1rem;
+}
+.home-hero h1 {
+  font-family: var(--display); font-size: 2rem; font-weight: 700;
+  line-height: 1.2; margin-bottom: 0.75rem;
+}
+.hero-gradient { background: linear-gradient(135deg, var(--purple-light), var(--teal)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.home-hero p { color: var(--text2); font-size: 14.5px; max-width: 500px; margin-bottom: 1.2rem; }
+.hero-stats { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.hero-stat { }
+.hero-stat-num { font-family: var(--display); font-size: 1.4rem; font-weight: 700; color: var(--text); }
+.hero-stat-lbl { font-size: 12px; color: var(--text3); }
+
+.section-title { font-family: var(--display); font-size: 14px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.9rem; }
+
+.modules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.module-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.module-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--card-accent, var(--purple));
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.module-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.module-card:hover::before { opacity: 1; }
+.card-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.card-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; flex-shrink: 0;
+}
+.card-meta { flex: 1; }
+.card-title { font-family: var(--display); font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+.card-sub { font-size: 11.5px; color: var(--text3); }
+.card-desc { font-size: 13px; color: var(--text2); line-height: 1.55; margin-bottom: 10px; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; }
+.card-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 500; }
+.card-arrow { font-size: 14px; color: var(--text3); }
+
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+.quick-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 1.25rem;
+  cursor: pointer; transition: all var(--transition);
+  display: flex; align-items: center; gap: 14px;
+}
+.quick-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.quick-icon { font-size: 28px; }
+.quick-title { font-family: var(--display); font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.quick-sub { font-size: 12px; color: var(--text3); }
+
+/* ===== MODULE VIEW ===== */
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text3); margin-bottom: 1.2rem; flex-wrap: wrap; }
+.breadcrumb .sep { opacity: 0.4; }
+.breadcrumb .crumb-link { cursor: pointer; transition: color var(--transition); }
+.breadcrumb .crumb-link:hover { color: var(--purple-light); }
+.breadcrumb .crumb-current { color: var(--text); }
+
+.module-header {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 1.2rem 1.4rem;
+  margin-bottom: 1rem;
+}
+.module-header-icon { font-size: 26px; }
+.module-header-title { font-family: var(--display); font-size: 17px; font-weight: 700; }
+.module-header-desc { font-size: 13px; color: var(--text2); }
+.module-tabs {
+  display: flex; gap: 4px;
+  background: var(--bg3); border-radius: var(--radius); padding: 4px;
+  margin-bottom: 1.2rem; width: fit-content;
+}
+.tab-btn {
+  background: none; border: none;
+  padding: 7px 16px; border-radius: 8px;
+  font-size: 13px; color: var(--text2);
+  transition: all var(--transition);
+  font-family: var(--sans);
+}
+.tab-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+
+/* Lessons */
+.lesson-wrap { display: grid; grid-template-columns: 200px 1fr; gap: 14px; }
+.lesson-nav-list { display: flex; flex-direction: column; gap: 4px; }
+.lesson-nav-item {
+  background: none; border: 1px solid transparent;
+  border-radius: var(--radius); padding: 8px 12px;
+  font-size: 12.5px; text-align: left; color: var(--text2);
+  cursor: pointer; transition: all var(--transition);
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--sans);
+}
+.lesson-nav-item:hover { background: var(--bg3); color: var(--text); }
+.lesson-nav-item.active { background: var(--purple-bg); color: var(--purple-light); border-color: rgba(124,110,247,0.2); }
+.lesson-num { font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; background: var(--bg4); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lesson-content { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; }
+.lesson-title { font-family: var(--display); font-size: 17px; font-weight: 600; margin-bottom: 0.9rem; }
+.lesson-body { font-size: 14px; color: var(--text2); line-height: 1.7; margin-bottom: 1rem; }
+.lesson-body code { font-family: var(--mono); font-size: 12.5px; background: var(--bg4); color: var(--purple-light); padding: 2px 5px; border-radius: 4px; }
+.lesson-body strong { color: var(--text); font-weight: 500; }
+
+.tips-box {
+  background: var(--purple-bg);
+  border: 1px solid rgba(124,110,247,0.2);
+  border-radius: var(--radius); padding: 1rem;
+  margin-bottom: 1rem;
+}
+.tips-title { font-size: 12px; font-weight: 600; color: var(--purple-light); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+.tip-item { font-size: 13px; color: var(--text); padding: 4px 0; display: flex; gap: 8px; }
+.tip-arrow { color: var(--purple-light); flex-shrink: 0; }
+
+.note-box {
+  background: var(--bg3);
+  border-left: 3px solid var(--teal);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 0.85rem 1rem;
+  font-size: 13px; white-space: pre-wrap;
+  line-height: 1.7; color: var(--text2); margin-bottom: 1rem;
+}
+
+pre.code-block {
+  background: #0d0f18;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  overflow-x: auto;
+  color: #c8d0e8;
+  margin-bottom: 1rem;
+  tab-size: 2;
+}
+/* Syntax highlighting */
+.kw { color: #c792ea; }
+.fn { color: #82aaff; }
+.str { color: #c3e88d; }
+.cmt { color: #546e7a; font-style: italic; }
+.attr { color: #ffcb6b; }
+.num { color: #f78c6c; }
+.cls { color: #ffcb6b; }
+.var-c { color: #89ddff; }
+.tag { color: #f07178; }
+.op { color: #89ddff; }
+
+.lesson-nav-btns { display: flex; justify-content: space-between; margin-top: 1.2rem; }
+.btn-secondary {
+  background: var(--bg4); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 8px 16px;
+  font-size: 13px; color: var(--text2);
+  transition: all var(--transition);
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--sans);
+}
+.btn-secondary:hover { background: var(--bg3); color: var(--text); }
+.btn-go {
+  background: var(--purple); border: none;
+  border-radius: var(--radius); padding: 8px 18px;
+  font-size: 13px; color: white; font-weight: 500;
+  display: flex; align-items: center; gap: 6px;
+  transition: all var(--transition);
+  font-family: var(--sans);
+}
+.btn-go:hover { background: var(--purple-light); }
+
+/* ===== QUIZ ===== */
+.quiz-wrap { max-width: 640px; }
+.quiz-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.quiz-counter { font-size: 13px; color: var(--text3); }
+.quiz-progress { flex: 1; height: 5px; background: var(--bg4); border-radius: 3px; margin: 0 12px; overflow: hidden; }
+.quiz-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--teal)); border-radius: 3px; transition: width 0.4s ease; }
+.quiz-question { font-family: var(--display); font-size: 16px; font-weight: 600; margin-bottom: 1.2rem; line-height: 1.4; }
+.quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opt {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 16px;
+  font-size: 14px; color: var(--text); cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+  transition: all var(--transition); text-align: left;
+  font-family: var(--sans);
+}
+.quiz-opt:hover:not(:disabled) { border-color: var(--purple); background: var(--purple-bg); }
+.quiz-opt:disabled { cursor: default; }
+.quiz-opt.correct { border-color: var(--teal); background: var(--teal-bg); color: var(--teal); }
+.quiz-opt.wrong { border-color: var(--coral); background: var(--coral-bg); color: var(--coral); }
+.opt-letter {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--bg4); color: var(--text3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px; font-weight: 700; flex-shrink: 0;
+  transition: all var(--transition);
+}
+.quiz-opt.correct .opt-letter { background: var(--teal); color: var(--bg); }
+.quiz-opt.wrong .opt-letter { background: var(--coral); color: white; }
+.quiz-next { margin-top: 1rem; display: flex; justify-content: flex-end; }
+
+/* Results */
+.result-wrap { text-align: center; padding: 2rem 1rem; max-width: 500px; margin: 0 auto; }
+.result-score { font-family: var(--display); font-size: 4rem; font-weight: 700; margin-bottom: 0.3rem; }
+.result-label { font-size: 16px; font-weight: 500; margin-bottom: 0.5rem; }
+.result-msg { font-size: 14px; color: var(--text3); margin-bottom: 1.5rem; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; text-align: left; }
+.result-stat { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1rem; }
+.result-stat-num { font-family: var(--display); font-size: 1.4rem; font-weight: 700; }
+.result-stat-lbl { font-size: 12px; color: var(--text3); }
+.review-list { text-align: left; }
+.review-item { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1rem; margin-bottom: 8px; }
+.review-q { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.review-ans { font-size: 12.5px; }
+
+/* ===== FLASHCARDS ===== */
+.fc-wrap { max-width: 580px; margin: 0 auto; }
+.fc-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 3rem 2rem;
+  min-height: 220px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; transition: all 0.25s ease;
+  margin-bottom: 1rem; position: relative;
+}
+.fc-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.fc-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 1.2rem; }
+.fc-term { font-family: var(--mono); font-size: 1.5rem; font-weight: 500; color: var(--purple-light); }
+.fc-def { font-size: 15px; color: var(--text); line-height: 1.65; }
+.fc-hint { font-size: 12px; color: var(--text3); margin-top: 1.5rem; }
+.fc-controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 1rem; }
+.fc-dots { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.fc-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--bg4); transition: background 0.3s; }
+.fc-dot.done { background: var(--teal); }
+.fc-dot.current { background: var(--purple); }
+
+/* ===== EXAM ===== */
+.exam-hero {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 2rem;
+  text-align: center; margin-bottom: 1.5rem;
+}
+.exam-title { font-family: var(--display); font-size: 1.5rem; font-weight: 700; margin-bottom: 0.6rem; }
+.exam-sub { font-size: 14px; color: var(--text2); margin-bottom: 1.2rem; }
+.exam-meta { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1.5rem; }
+.exam-meta-item { text-align: center; }
+.exam-meta-num { font-family: var(--display); font-size: 1.6rem; font-weight: 700; color: var(--purple-light); }
+.exam-meta-lbl { font-size: 12px; color: var(--text3); }
+.module-tag-chip {
+  display: inline-flex; align-items: center;
+  background: var(--coral-bg); border: 1px solid rgba(240,122,90,0.2);
+  color: var(--coral); border-radius: 6px;
+  padding: 3px 10px; font-size: 11.5px; font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.25s ease forwards; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  :root { --sidebar: 0px; }
+  #sidebar { transform: translateX(-100%); width: 260px; }
+  #sidebar.open { transform: translateX(0); }
+  #main { margin-left: 0; }
+  #mobile-toggle { display: flex; align-items: center; }
+  .lesson-wrap { grid-template-columns: 1fr; }
+  .lesson-nav-list { flex-direction: row; flex-wrap: wrap; }
+  .quick-grid { grid-template-columns: 1fr; }
+  .home-hero h1 { font-size: 1.5rem; }
+  #content { padding: 1rem; }
+}
+@media (max-width: 500px) {
+  .modules-grid { grid-template-columns: 1fr; }
+}
+
+/* Overlay for mobile sidebar */
+#overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+#overlay.show { display: block; }
+</style>
+</head>
+<body>
+<div id="overlay" onclick="closeSidebar()"></div>
+<div id="layout">
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div id="sidebar-logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="logo-text">Symfony with LOUTCHEE</div>
+      <div class="logo-badge">EHEIO 2026</div>
+    </div>
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section-label">Navigation</div>
+    <div class="nav-item active" onclick="showHome()" id="nav-home">
+      <span class="nav-icon">🏠</span> Accueil
+    </div>
+    <div class="nav-section-label" style="margin-top:0.6rem">Modules</div>
+    <div class="nav-item" onclick="showModule('routing')" id="nav-routing">
+      <span class="nav-icon">🔀</span> Contrôleurs & Routing
+      <span class="nav-badge">5</span>
+    </div>
+    <div class="nav-item" onclick="showModule('twig')" id="nav-twig">
+      <span class="nav-icon">🌿</span> Twig Templates
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" onclick="showModule('di')" id="nav-di">
+      <span class="nav-icon">⚙️</span> Injection Dépendances
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" onclick="showModule('forms')" id="nav-forms">
+      <span class="nav-icon">📝</span> Formulaires
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" onclick="showModule('doctrine')" id="nav-doctrine">
+      <span class="nav-icon">🗄️</span> Doctrine & BDD
+      <span class="nav-badge">4</span>
+    </div>
+    <div class="nav-item" onclick="showModule('security')" id="nav-security">
+      <span class="nav-icon">🔒</span> Sécurité
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-section-label" style="margin-top:0.6rem">Révision</div>
+    <div class="nav-item" onclick="showFlashcards()" id="nav-fc">
+      <span class="nav-icon">🃏</span> Flashcards
+      <span class="nav-badge">36</span>
+    </div>
+    <div class="nav-item" onclick="showExam()" id="nav-exam">
+      <span class="nav-icon">📋</span> Examen Blanc
+      <span class="nav-badge">30+</span>
+    </div>
+  </nav>
+  <div id="sidebar-footer">
+    <div class="progress-mini"><span>Progression</span><span id="prog-txt">0%</span></div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div id="main">
+  <!-- TOPBAR -->
+  <header id="topbar">
+    <button id="mobile-toggle" onclick="toggleSidebar()">☰</button>
+    <div id="search-wrap">
+      <span>🔍</span>
+      <input type="text" id="search" placeholder="Rechercher un concept..." oninput="handleSearch(this.value)">
+    </div>
+    <div class="topbar-right">
+      <button class="btn-outline" onclick="showFlashcards()">🃏 Flashcards</button>
+      <button class="btn-primary" onclick="showExam()">📋 Examen</button>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main id="content"></main>
+</div>
+</div>
+
+<script>
+// ===== DATA =====
+const MODULES = {
+  routing: {
+    id:'routing', icon:'🔀', color:'purple', title:'Contrôleurs & Routing',
+    desc:'Définir des routes, gérer les requêtes HTTP, redirections, paramètres de route',
+    accent:'#7c6ef7',
+    lessons:[
+      {
+        title:'Structure d\'un projet Symfony',
+        body:`<p>Un projet Symfony a une structure de dossiers précise. Voici les éléments importants à connaître :</p>`,
+        code:`symfony_project/
+├── bin/          # Contient bin/console (commandes CLI)
+├── config/       # Fichiers de configuration
+│   ├── packages/
+│   ├── routes/
+│   └── services.yaml
+├── public/       # Seul dossier accessible depuis le web
+│   └── index.php
+├── src/          # Votre code PHP
+│   ├── Controller/
+│   ├── Entity/
+│   ├── Form/
+│   ├── Repository/
+│   └── Service/
+├── templates/    # Templates Twig (.html.twig)
+├── var/          # Cache et logs (généré automatiquement)
+│   ├── cache/
+│   └── log/
+└── vendor/       # Dépendances Composer (ne pas modifier)`,
+        note:'❌ Les dossiers infra/ et styles/ ne font PAS partie de la structure initiale de Symfony.\n✅ public/ est le seul dossier exposé sur le web.',
+        tips:['public/ → seul dossier accessible depuis le navigateur','var/cache/ → généré automatiquement, ne jamais modifier','templates/ → tous les fichiers Twig (.html.twig)','src/ → tout votre code PHP (Controllers, Entities, Services...)']
+      },
+      {
+        title:'L\'attribut #[Route]',
+        body:`<p>L'attribut <code>#[Route]</code> définit une URL qui déclenche une méthode de contrôleur. Il remplace les anciens fichiers YAML de routing.</p>
+<p>Le nom (name) est <strong>optionnel mais fortement recommandé</strong> pour générer des URLs dans Twig avec <code>path()</code>.</p>`,
+        code:`\u003C?php
+namespace App\\Controller;
+
+use Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController;
+use Symfony\\Component\\HttpFoundation\\Response;
+use Symfony\\Component\\Routing\\Attribute\\Route;
+
+class UserController extends AbstractController
+{
+    // Route simple — méthode GET uniquement
+    #[Route('/users', name: 'app_users_list', methods: ['GET'])]
+    public function list(): Response
+    {
+        return $this-\u003Erender('user/list.html.twig');
+    }
+
+    // Route avec paramètre + contrainte regex
+    #[Route('/users/{id}', name: 'app_user_show',
+        requirements: ['id' =\u003E '\\d+'],   // id doit être un entier
+        methods: ['GET']
+    )]
+    public function show(int $id): Response
+    {
+        // $id est automatiquement injecté via le nom du paramètre
+        return $this-\u003Erender('user/show.html.twig', ['id' =\u003E $id]);
+    }
+
+    // Route qui accepte GET et POST
+    #[Route('/users/new', name: 'app_user_new', methods: ['GET', 'POST'])]
+    public function new(): Response { ... }
+}`,
+        note:'💡 Le name est optionnel MAIS recommandé.\nL\'attribut #[Route] peut aller sur la classe (préfixe) ET sur les méthodes.',
+        tips:['methods: [\'GET\'] → restreint aux méthodes HTTP','requirements: → valide avec une regex (\\d+ = entiers seulement)','name: → permet path(\'app_users_list\') dans Twig','Sans name, Symfony génère un nom automatique (déconseillé)']
+      },
+      {
+        title:'Méthodes de réponse (AbstractController)',
+        body:`<p>AbstractController offre plusieurs méthodes pour retourner différents types de réponses HTTP.</p>`,
+        code:`\u003C?php
+use Symfony\\Component\\HttpFoundation\\Response;
+use Symfony\\Component\\HttpFoundation\\JsonResponse;
+use Symfony\\Component\\HttpFoundation\\RedirectResponse;
+
+class MyController extends AbstractController
+{
+    // ✅ Réponse HTML via Twig
+    public function page(): Response
+    {
+        return $this-\u003Erender('page.html.twig', [
+            'title' =\u003E 'Ma page',
+            'items' =\u003E ['a', 'b', 'c'],
+        ]);
+    }
+
+    // ✅ Réponse JSON (pour API REST)
+    public function api(): JsonResponse
+    {
+        return $this-\u003Ejson(['success' =\u003E true, 'data' =\u003E []]);
+    }
+
+    // ✅ Redirection vers une ROUTE nommée (interne)
+    public function goHome(): RedirectResponse
+    {
+        return $this-\u003EredirectToRoute('app_users_list');
+        // Avec paramètres : redirectToRoute('app_user_show', ['id' =\u003E 42])
+    }
+
+    // ✅ Redirection vers une URL externe
+    public function goExternal(): RedirectResponse
+    {
+        return $this-\u003Eredirect('https://symfony.com');
+    }
+
+    // ✅ Déclencher une erreur 404
+    public function notFound(): never
+    {
+        throw $this-\u003EcreateNotFoundException('Utilisateur introuvable');
+    }
+}`,
+        note:'',
+        tips:['render() → HTML (via Twig)','json() → JsonResponse (API)','redirectToRoute() → redirection interne','redirect() → redirection URL externe','createNotFoundException() → erreur 404']
+      },
+      {
+        title:'L\'objet Request (requête HTTP)',
+        body:`<p>L'objet <code>Request</code> encapsule toutes les données de la requête HTTP entrante.</p>`,
+        code:`\u003C?php
+use Symfony\\Component\\HttpFoundation\\Request;
+
+#[Route('/form', name: 'app_form', methods: ['GET', 'POST'])]
+public function form(Request $request): Response
+{
+    // ===== VÉRIFIER LA MÉTHODE HTTP =====
+    if ($request-\u003EisMethod('POST')) { ... }
+    if ($request-\u003EisMethod('DELETE')) { ... }
+    if ($request-\u003EisMethod('PUT')) { ... }
+
+    // ===== DÉTECTER UNE REQUÊTE AJAX =====
+    if ($request-\u003EisXmlHttpRequest()) {
+        return $this-\u003Ejson(['status' =\u003E 'ok']);
+    }
+
+    // ===== DONNÉES POST (formulaire) =====
+    $name  = $request-\u003Erequest-\u003Eget('name');
+    $email = $request-\u003Erequest-\u003Eget('email', 'default@mail.com');
+
+    // ===== PARAMÈTRES GET (?page=2&sort=asc) =====
+    $page = $request-\u003Equery-\u003Eget('page', 1);
+    $sort = $request-\u003Equery-\u003Eget('sort', 'asc');
+
+    // ===== HEADERS HTTP =====
+    $token = $request-\u003Eheaders-\u003Eget('Authorization');
+    $type  = $request-\u003Eheaders-\u003Eget('Content-Type');
+
+    // ===== FICHIERS UPLOADÉS =====
+    $file = $request-\u003Efiles-\u003Eget('avatar');
+
+    return $this-\u003Erender('form.html.twig');
+}`,
+        note:'',
+        tips:['$request->request → données POST (formulaire HTML)','$request->query → paramètres GET (URL ?key=val)','$request->isXmlHttpRequest() → détecte une requête AJAX','$request->isMethod() → vérifie la méthode HTTP (GET, POST, DELETE...)']
+      },
+      {
+        title:'Priority et debug:router',
+        body:`<p>Symfony évalue les routes dans un ordre précis. L'option <code>priority</code> permet de forcer l'ordre d'évaluation quand des routes se chevauchent.</p>`,
+        code:`\u003C?php
+// ⚠️ PROBLÈME : Les 2 routes peuvent capturer /articles/special
+#[Route('/articles/{slug}', name: 'app_article_show')]
+public function show(string $slug): Response { ... }
+
+#[Route('/articles/special', name: 'app_article_special')]
+public function special(): Response { ... }
+// → La première route capturera /articles/special avec slug="special" !
+
+// ✅ SOLUTION : Utiliser priority
+#[Route('/articles/{slug}', name: 'app_article_show', priority: 0)]  // évaluée après
+public function show(string $slug): Response { ... }
+
+#[Route('/articles/special', name: 'app_article_special', priority: 10)]  // évaluée EN PREMIER
+public function special(): Response { ... }
+
+// ✅ AUTRE SOLUTION : utiliser requirements pour restreindre
+#[Route('/articles/{slug}', name: 'app_article_show',
+    requirements: ['slug' =\u003E '[a-z0-9-]+']
+)]
+public function show(string $slug): Response { ... }`,
+        note:'🔧 Commandes utiles :\n\n# Lister toutes les routes\n$ php bin/console debug:router\n\n# Inspecter une route précise\n$ php bin/console debug:router app_user_show\n\n# Tester si une URL matche une route\n$ php bin/console router:match /users/42',
+        tips:['Plus la priority est haute, plus la route est prioritaire','Par défaut : priority = 0','debug:router → voir toutes les routes et leurs propriétés','router:match → tester quelle route correspond à une URL']
+      }
+    ],
+    quiz:[
+      {q:'Quel dossier de Symfony contient les templates Twig ?', opts:['src/templates/','views/','templates/','public/twig/'], ans:2},
+      {q:'Comment déclencher une erreur 404 dans un contrôleur Symfony ?', opts:['return new Response(404)','throw $this->createNotFoundException()','return $this->notFound()','throw new Exception(404)'], ans:1},
+      {q:'Quelle méthode de AbstractController retourne du JSON ?', opts:['render()','jsonResponse()','json()','apiResponse()'], ans:2},
+      {q:'Comment vérifier si la requête HTTP courante est de type Ajax ?', opts:['$request->isAjax()','$request->isXmlHttpRequest()','$request->ajax()','$request->checkAjax()'], ans:1},
+      {q:'Quelle syntaxe PHP 8 définit une route sur un contrôleur ?', opts:['@Route(\'/\')','#[Route(\'/\')]','[Route(\'/\')]','Route::get(\'/\')'], ans:1},
+      {q:'Quelle commande liste toutes les routes d\'un projet Symfony ?', opts:['php bin/console routes:list','php bin/console debug:router','php bin/console show:routes','php bin/console route:debug'], ans:1},
+      {q:'L\'attribut #[Route] doit-il impérativement avoir un name configuré ?', opts:['Oui, c\'est obligatoire','Non, le name est optionnel','Oui, sinon erreur 500','Non, mais Symfony en génère un automatiquement'], ans:3},
+      {q:'Quel objet donne accès aux données POST d\'un formulaire ?', opts:['$request->post','$request->form','$request->request','$request->data'], ans:2}
+    ]
+  },
+  twig: {
+    id:'twig', icon:'🌿', color:'teal', title:'Templates Twig',
+    desc:'Affichage de variables, boucles, conditions, héritage de templates, fonctions Twig',
+    accent:'#2dd4a8',
+    lessons:[
+      {
+        title:'Syntaxe de base Twig',
+        body:`<p>Twig utilise 3 types de balises spéciales pour séparer la logique de l'affichage :</p>`,
+        code:`{# ===== LES 3 BALISES TWIG ===== #}
+
+{# 1. {{ }} — AFFICHER une variable ou expression #}
+{{ user.name }}
+{{ 'Bonjour ' ~ user.name ~ ' !' }}
+{{ 10 + 5 }}
+{{ product.price | number_format(2, ',', ' ') ~ ' €' }}
+
+{# 2. {% %} — INSTRUCTIONS (boucles, conditions, blocs) #}
+
+{% if user.isAdmin %}
+    \u003Ca href="/admin"\u003EAdministration\u003C/a\u003E
+{% elseif user.isPremium %}
+    \u003Cspan\u003ECompte Premium\u003C/span\u003E
+{% else %}
+    \u003Cspan\u003ECompte gratuit\u003C/span\u003E
+{% endif %}
+
+{% for product in products %}
+    \u003Cdiv class="card"\u003E
+        \u003Ch3\u003E{{ product.name }}\u003C/h3\u003E
+        \u003Cp\u003E{{ product.price }} €\u003C/p\u003E
+    \u003C/div\u003E
+{% else %}
+    \u003Cp\u003EAucun produit disponible.\u003C/p\u003E
+{% endfor %}
+
+{# 3. {# #} — COMMENTAIRES (non visibles dans le HTML généré) #}
+{# Ce commentaire ne sera pas rendu dans la page #}
+
+{# ===== FILTRES UTILES ===== #}
+{{ user.name | upper }}           {# JEAN DUPONT #}
+{{ user.name | lower }}           {# jean dupont #}
+{{ user.name | capitalize }}      {# Jean dupont #}
+{{ text | truncate(100, '...') }} {# Tronque à 100 chars #}
+{{ date | date('d/m/Y H:i') }}   {# 04/06/2026 22:57 #}
+{{ items | length }}              {# Nombre d'éléments #}
+{{ price | number_format(2) }}    {# 1 234.56 #}`,
+        note:'',
+        tips:['{{ }} → afficher une valeur','{% %} → instruction (if, for, block, extends...)','| → appliquer un filtre (upper, lower, date, length...)','~ → concaténer des chaînes en Twig']
+      },
+      {
+        title:'Héritage de templates',
+        body:`<p>L'héritage de templates est la fonctionnalité la plus puissante de Twig. Une template "parent" définit la mise en page commune, les templates "enfants" remplissent les blocs.</p>`,
+        code:`{# templates/base.html.twig — TEMPLATE PARENTE (layout) #}
+\u003C!DOCTYPE html\u003E
+\u003Chtml lang="fr"\u003E
+\u003Chead\u003E
+    \u003Cmeta charset="UTF-8"\u003E
+    \u003Ctitle\u003E{% block title %}Mon Site{% endblock %}\u003C/title\u003E
+
+    {% block stylesheets %}
+        \u003Clink rel="stylesheet" href="{{ asset('css/app.css') }}"\u003E
+    {% endblock %}
+\u003C/head\u003E
+\u003Cbody\u003E
+    \u003Cnav\u003E\u003C!-- Navigation commune à TOUTES les pages --\u003E\u003C/nav\u003E
+
+    \u003Cmain class="container"\u003E
+        {% block body %}
+            {# Les pages enfants injectent leur contenu ici #}
+        {% endblock %}
+    \u003C/main\u003E
+
+    \u003Cfooter\u003E\u003C!-- Pied de page commun --\u003E\u003C/footer\u003E
+
+    {% block javascripts %}
+        \u003Cscript src="{{ asset('js/app.js') }}"\u003E\u003C/script\u003E
+    {% endblock %}
+\u003C/body\u003E
+\u003C/html\u003E
+
+{# ======================================================= #}
+{# templates/user/list.html.twig — TEMPLATE ENFANT #}
+
+{% extends 'base.html.twig' %}  {# ← Hérite du layout ! #}
+
+{% block title %}Liste des utilisateurs — Mon Site{% endblock %}
+
+{% block body %}
+    \u003Ch1\u003EUtilisateurs ({{ users | length }})\u003C/h1\u003E
+
+    {% for user in users %}
+        \u003Cdiv\u003E{{ user.name }} — {{ user.email }}\u003C/div\u003E
+    {% else %}
+        \u003Cp\u003EAucun utilisateur trouvé.\u003C/p\u003E
+    {% endfor %}
+{% endblock %}
+
+{# Ajouter du CSS spécifique à cette page : #}
+{% block stylesheets %}
+    {{ parent() }}  {# ← Inclut le CSS du parent #}
+    \u003Clink rel="stylesheet" href="{{ asset('css/users.css') }}"\u003E
+{% endblock %}`,
+        note:'💡 Intérêt de l\'héritage : éviter la répétition du HTML commun (nav, footer, meta) sur toutes les pages. Une seule modification dans base.html.twig affecte toutes les pages.',
+        tips:['extends → hérite du template parent','block → zone remplaçable par les enfants','{{ parent() }} → inclut le contenu du bloc parent','Sans extends, la page est autonome (pas d\'héritage)']
+      },
+      {
+        title:'Fonctions Twig essentielles',
+        body:`<p>Twig fournit des fonctions indispensables pour générer des URLs et inclure des ressources.</p>`,
+        code:`{# ===== path() — URL RELATIVE (interne) ===== #}
+\u003Ca href="{{ path('app_users_list') }}"\u003E
+    Voir tous les utilisateurs
+\u003C/a\u003E
+{# Résultat : href="/users" #}
+
+\u003Ca href="{{ path('app_user_show', {id: user.id}) }}"\u003E
+    Voir le profil
+\u003C/a\u003E
+{# Résultat : href="/users/42" #}
+
+{# ===== absolute_url() — URL ABSOLUE ===== #}
+\u003Clink rel="canonical" href="{{ absolute_url(path('app_home')) }}"\u003E
+{# Résultat : href="https://www.monsite.com/" #}
+
+{# ===== asset() — Fichiers CSS / JS / Images ===== #}
+\u003Clink rel="stylesheet" href="{{ asset('css/app.css') }}"\u003E
+\u003Cscript src="{{ asset('js/app.js') }}"\u003E\u003C/script\u003E
+\u003Cimg src="{{ asset('images/logo.png') }}" alt="Logo"\u003E
+{# Résultat : href="/css/app.css" (avec cache busting automatique) #}
+
+{# ===== include() — Template partielle ===== #}
+{{ include('partials/_navbar.html.twig') }}
+{{ include('partials/_card.html.twig', {user: user}) }}
+{{ include('partials/_alert.html.twig', {message: 'Succès !'}) }}
+
+{# ===== app.user — Utilisateur connecté ===== #}
+{% if app.user %}
+    \u003Cp\u003EConnecté : {{ app.user.email }}\u003C/p\u003E
+    {# Oui, possible en Twig ! Pas seulement en PHP. #}
+{% else %}
+    \u003Ca href="{{ path('app_login') }}"\u003ESe connecter\u003C/a\u003E
+{% endif %}
+
+{# ===== is_granted() — Vérifier les droits ===== #}
+{% if is_granted('ROLE_ADMIN') %}
+    \u003Ca href="/admin"\u003EAdministration\u003C/a\u003E
+{% endif %}`,
+        note:'',
+        tips:['path() → URL relative (/users/42)','absolute_url() → URL complète (https://...)','asset() → fichiers statiques CSS/JS/images','include() → inclure un composant réutilisable','app.user → utilisateur connecté (disponible dans TOUS les templates)']
+      }
+    ],
+    quiz:[
+      {q:'Comment afficher une variable $name en Twig ?', opts:['<? echo $name ?>','{% name %}','{{ name }}','[[ name ]]'], ans:2},
+      {q:'Quelle fonction Twig génère une URL ABSOLUE (avec http://) ?', opts:['url()','path()','absolute_url()','full_url()'], ans:2},
+      {q:'Quelle fonction Twig intègre les ressources CSS/JS/images ?', opts:['resource()','include()','asset()','src()'], ans:2},
+      {q:'Comment hériter d\'un template parent en Twig ?', opts:['{% include \'base.html.twig\' %}','{% extends \'base.html.twig\' %}','{% inherit \'base.html.twig\' %}','{% use \'base.html.twig\' %}'], ans:1},
+      {q:'Est-il possible de récupérer l\'utilisateur connecté en Twig ?', opts:['Non, uniquement en PHP','Oui, via app.user','Oui, via getUser()','Non, jamais possible'], ans:1},
+      {q:'Quelle fonction Twig inclut un template partiel ?', opts:['require()','import()','include()','use()'], ans:2},
+      {q:'Comment définir une zone remplaçable dans un template Twig ?', opts:['{% zone body %}','{% section body %}','{% block body %}','{% slot body %}'], ans:2},
+      {q:'Quel filtre Twig convertit en MAJUSCULES ?', opts:['| upper','| caps','| uppercase','| toUpper'], ans:0}
+    ]
+  },
+  di: {
+    id:'di', icon:'⚙️', color:'coral', title:'Injection de Dépendances',
+    desc:'Service Container, Autowiring, Autoconfiguration, services.yaml, interfaces',
+    accent:'#f07a5a',
+    lessons:[
+      {
+        title:'Le Service Container',
+        body:`<p>Le <strong>Service Container</strong> est le cœur de Symfony. Il instancie, configure et injecte automatiquement tous les objets (services) de votre application.</p>
+<p>Le fichier de configuration est <code>config/services.yaml</code>.</p>`,
+        code:`# config/services.yaml — CONFIGURATION DU SERVICE CONTAINER
+
+parameters:
+    app.admin_email: 'admin@example.com'    # Paramètre réutilisable
+    app.items_per_page: 20                  # Utilisable partout
+
+services:
+    # Configuration par défaut pour TOUS les services
+    _defaults:
+        autowire: true        # ✅ Injection automatique des dépendances
+        autoconfigure: true   # ✅ Configuration auto (tags Event, Console, etc.)
+
+    # Enregistre automatiquement TOUS les fichiers src/ comme services
+    App\\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'        # Les entités ne sont pas des services
+            - '../src/Kernel.php'
+
+    # ===== SERVICE AVEC ARGUMENTS MANUELS =====
+    App\\Service\\Mailer:
+        arguments:
+            $apiKey: '%env(MAILER_API_KEY)%'       # Variable d'env
+            $adminEmail: '%app.admin_email%'        # Paramètre
+            $debug: '%kernel.debug%'               # Paramètre Symfony
+
+    # ===== ALIAS POUR UNE INTERFACE =====
+    App\\NotifierInterface: '@App\\Service\\EmailNotifier'`,
+        note:'📁 Fichier de configuration : config/services.yaml\n\n🔧 Commande pour voir les services disponibles :\n$ php bin/console debug:container\n$ php bin/console debug:container Mailer',
+        tips:['autowire: true → Symfony résout automatiquement les dépendances','autoconfigure: true → tags automatiques (EventListener, Command...)','App\\: resource → tous les fichiers src/ sont enregistrés','Les paramètres (%app.xyz%) sont réutilisables dans toute l\'app']
+      },
+      {
+        title:'L\'Autowiring — Injection automatique',
+        body:`<p>L'<strong>Autowiring</strong> permet à Symfony d'analyser les types des arguments du constructeur et d'injecter automatiquement les bons services, sans configuration manuelle.</p>`,
+        code:`\u003C?php
+// ===== EXEMPLE CONCRET D'AUTOWIRING =====
+namespace App\\Service;
+
+use App\\Repository\\ProductRepository;
+use Psr\\Log\\LoggerInterface;
+use Symfony\\Component\\Mailer\\MailerInterface;
+
+class OrderService
+{
+    // Symfony lit les types et injecte automatiquement !
+    public function __construct(
+        private readonly ProductRepository $productRepo,  // ✅ Auto-injecté
+        private readonly LoggerInterface $logger,         // ✅ Auto-injecté
+        private readonly MailerInterface $mailer          // ✅ Auto-injecté
+    ) {
+        // Pas besoin de config manuelle dans services.yaml !
+    }
+
+    public function createOrder(int $productId, int $quantity): void
+    {
+        $product = $this-\u003EproductRepo-\u003Efind($productId);
+
+        if (!$product) {
+            throw new \\InvalidArgumentException('Produit introuvable');
+        }
+
+        $this-\u003Elogger-\u003Einfo('Commande créée', [
+            'product' =\u003E $product-\u003EgetName(),
+            'quantity' =\u003E $quantity
+        ]);
+
+        // Envoyer un email de confirmation...
+    }
+}
+
+// Dans le contrôleur — aussi de l'Autowiring !
+class OrderController extends AbstractController
+{
+    public function __construct(
+        private readonly OrderService $orderService  // ✅ Auto-injecté
+    ) {}
+}
+
+// ===== DÉBOGUER L'AUTOWIRING =====
+// $ php bin/console debug:container OrderService
+// $ php bin/console debug:autowiring Logger`,
+        note:'',
+        tips:['Autowiring fonctionne grâce aux type hints PHP','Symfony lit le constructeur et résout les dépendances','debug:container → voir quel service est injecté','debug:autowiring [terme] → trouver les services disponibles']
+      },
+      {
+        title:'Interfaces et Binding',
+        body:`<p>Utiliser des interfaces comme type d'argument permet plus de flexibilité et facilite les tests unitaires. Mais Symfony doit savoir quelle implémentation injecter.</p>`,
+        code:`\u003C?php
+// ===== 1. DÉFINIR L'INTERFACE =====
+namespace App\\Service;
+
+interface NotifierInterface
+{
+    public function send(string $to, string $message): void;
+}
+
+// ===== 2. LES IMPLÉMENTATIONS =====
+class EmailNotifier implements NotifierInterface
+{
+    public function send(string $to, string $message): void
+    {
+        // Envoi par email...
+        echo "Email envoyé à $to : $message";
+    }
+}
+
+class SmsNotifier implements NotifierInterface
+{
+    public function send(string $to, string $message): void
+    {
+        // Envoi par SMS...
+        echo "SMS envoyé à $to : $message";
+    }
+}
+
+// ===== 3. UTILISER L'INTERFACE =====
+class AlertService
+{
+    public function __construct(
+        private NotifierInterface $notifier  // Interface = flexibilité !
+    ) {}
+
+    public function sendAlert(string $message): void
+    {
+        $this-\u003Enotifier-\u003Esend('admin@example.com', $message);
+    }
+}
+
+// ===== 4. CONFIGURER LE BINDING (services.yaml) =====
+# Option A — Alias global (toutes les classes recevront EmailNotifier)
+services:
+    App\\Service\\NotifierInterface: '@App\\Service\\EmailNotifier'
+
+# Option B — Binding spécifique à une classe
+services:
+    App\\Service\\AlertService:
+        arguments:
+            $notifier: '@App\\Service\\SmsNotifier'
+
+# Option C — Bind global par nom de variable
+services:
+    _defaults:
+        bind:
+            App\\Service\\NotifierInterface $notifier: '@App\\Service\\EmailNotifier'`,
+        note:'❌ ERREUR CLASSIQUE :\n"Cannot autowire argument $notifier... it references interface\nNotifierInterface but no such service exists. You should maybe\nalias this interface to one of these existing services."\n\n✅ SOLUTION : Créer un alias dans services.yaml',
+        tips:['Interfaces → flexibilité + testabilité (facile de changer l\'implémentation)','Symfony ne peut pas deviner quelle implémentation choisir','Configurer un alias ou binding dans services.yaml','Pour les tests : remplacer l\'implémentation sans toucher au code']
+      }
+    ],
+    quiz:[
+      {q:'Quel fichier configure le Service Container Symfony ?', opts:['config/container.yaml','config/services.yaml','config/di.yaml','src/services.yaml'], ans:1},
+      {q:'Que signifie "autowire: true" dans services.yaml ?', opts:['Active le cache automatique','Injection automatique des dépendances','Active la sécurité','Optimise les routes'], ans:1},
+      {q:'Quelle commande liste les services disponibles dans le container ?', opts:['php bin/console services:list','php bin/console debug:container','php bin/console show:services','php bin/console container:debug'], ans:1},
+      {q:'À quoi servent les paramètres de conteneur (%app.xyz%) ?', opts:['Stocker des configurations réutilisables','Gérer la base de données','Définir les routes','Configurer Twig'], ans:0},
+      {q:'Que se passe-t-il si Symfony ne peut pas résoudre une interface par autowiring ?', opts:['Il utilise null','RuntimeException est lancée','Il crée une implémentation vide','Il ignore la dépendance'], ans:1},
+      {q:'Quel est l\'intérêt des lignes App\\ + resource: \'../src/\' dans services.yaml ?', opts:['Optimise le cache','Enregistre automatiquement tous les fichiers src/ comme services','Charge les entités','Configure les routes'], ans:1}
+    ]
+  },
+  forms: {
+    id:'forms', icon:'📝', color:'amber', title:'Formulaires & Validation',
+    desc:'FormType, createForm(), validation avec contraintes, affichage avec Twig',
+    accent:'#f5c842',
+    lessons:[
+      {
+        title:'Créer une classe FormType',
+        body:`<p>En Symfony, les formulaires sont des classes PHP qui héritent de <code>AbstractType</code>. On les génère avec la commande <code>make:form</code>.</p>`,
+        code:`# Générer une classe formulaire :
+$ php bin/console make:form UserType
+
+\u003C?php
+// src/Form/UserType.php
+namespace App\\Form;
+
+use App\\Entity\\User;
+use Symfony\\Component\\Form\\AbstractType;       // ← Classe de BASE obligatoire
+use Symfony\\Component\\Form\\Extension\\Core\\Type\\EmailType;
+use Symfony\\Component\\Form\\Extension\\Core\\Type\\TextType;
+use Symfony\\Component\\Form\\Extension\\Core\\Type\\PasswordType;
+use Symfony\\Component\\Form\\Extension\\Core\\Type\\CheckboxType;
+use Symfony\\Component\\Form\\Extension\\Core\\Type\\ChoiceType;
+use Symfony\\Component\\Form\\FormBuilderInterface;
+use Symfony\\Component\\OptionsResolver\\OptionsResolver;
+
+class UserType extends AbstractType   // ← Hériter de AbstractType !
+{
+    public function buildForm(FormBuilderInterface $builder, array $options): void
+    {
+        $builder
+            -\u003Eadd('name', TextType::class, [
+                'label' =\u003E 'Nom complet',
+                'attr'  =\u003E ['placeholder' =\u003E 'Jean Dupont', 'class' =\u003E 'form-control'],
+            ])
+            -\u003Eadd('email', EmailType::class, [
+                'label' =\u003E 'Adresse email',
+            ])
+            -\u003Eadd('password', PasswordType::class, [
+                'label'  =\u003E 'Mot de passe',
+                'mapped' =\u003E false,  // Ne correspond pas à une propriété de User
+            ])
+            -\u003Eadd('role', ChoiceType::class, [
+                'choices' =\u003E ['Admin' =\u003E 'ROLE_ADMIN', 'User' =\u003E 'ROLE_USER'],
+                'label'   =\u003E 'Rôle',
+            ])
+            -\u003Eadd('newsletter', CheckboxType::class, [
+                'label'    =\u003E 'Recevoir la newsletter',
+                'required' =\u003E false,
+            ]);
+    }
+
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver-\u003EsetDefaults([
+            'data_class' =\u003E User::class,   // ← Lié à l'entité User
+        ]);
+    }
+}`,
+        note:'',
+        tips:['Hériter de AbstractType est OBLIGATOIRE','buildForm() définit les champs du formulaire','data_class → lie le formulaire à une entité','mapped: false → champ non lié à une propriété de l\'entité (ex: confirmPassword)']
+      },
+      {
+        title:'Traiter le formulaire dans le contrôleur',
+        body:`<p>Dans le contrôleur, on crée le formulaire avec <code>createForm()</code>, on le traite avec <code>handleRequest()</code>, et on persiste les données si valide.</p>`,
+        code:`\u003C?php
+// src/Controller/UserController.php
+use App\\Entity\\User;
+use App\\Form\\UserType;
+use Doctrine\\ORM\\EntityManagerInterface;
+use Symfony\\Component\\HttpFoundation\\Request;
+
+class UserController extends AbstractController
+{
+    #[Route('/users/new', name: 'app_user_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $em): Response
+    {
+        $user = new User();
+
+        // 1. Créer le formulaire — méthode createForm()
+        $form = $this-\u003EcreateForm(UserType::class, $user);
+
+        // 2. Lier la requête HTTP au formulaire
+        $form-\u003EhandleRequest($request);
+
+        // 3. Vérifier soumis ET valide
+        if ($form-\u003EisSubmitted() && $form-\u003EisValid()) {
+
+            // L'entité $user est AUTOMATIQUEMENT remplie par Symfony !
+            // (grâce à data_class et handleRequest)
+
+            // Récupérer un champ 'mapped: false'
+            $plainPassword = $form-\u003Eget('password')-\u003EgetData();
+            // Hasher le mot de passe...
+
+            $em-\u003Epersist($user);   // Préparer l'insertion
+            $em-\u003Eflush();          // Exécuter en BDD
+
+            $this-\u003EaddFlash('success', 'Utilisateur créé avec succès !');
+            return $this-\u003EredirectToRoute('app_users_list');
+        }
+
+        return $this-\u003Erender('user/new.html.twig', [
+            'form' =\u003E $form,   // Passer le formulaire à Twig
+        ]);
+    }
+
+    // ===== ÉDITION (même logique) =====
+    #[Route('/users/{id}/edit', name: 'app_user_edit', methods: ['GET', 'POST'])]
+    public function edit(User $user, Request $request, EntityManagerInterface $em): Response
+    {
+        $form = $this-\u003EcreateForm(UserType::class, $user);  // Pré-rempli avec $user
+        $form-\u003EhandleRequest($request);
+
+        if ($form-\u003EisSubmitted() && $form-\u003EisValid()) {
+            $em-\u003Eflush();  // Pas besoin de persist() pour une mise à jour !
+            return $this-\u003EredirectToRoute('app_users_list');
+        }
+
+        return $this-\u003Erender('user/edit.html.twig', ['form' =\u003E $form, 'user' =\u003E $user]);
+    }
+}`,
+        note:'',
+        tips:['createForm() → crée l\'instance du formulaire','handleRequest() → lie les données POST au formulaire','isSubmitted() → vérifie si le formulaire a été envoyé (POST)','isValid() → vérifie les contraintes de validation','Pour une MAJ : pas besoin de persist(), juste flush()']
+      },
+      {
+        title:'Affichage Twig et contraintes de validation',
+        body:`<p>Dans Twig, on affiche le formulaire avec des fonctions dédiées. Les contraintes de validation se placent directement sur l'entité.</p>`,
+        code:`{# templates/user/new.html.twig #}
+
+{{ form_start(form) }}          {# \u003Cform action="" method="post"\u003E #}
+
+    {{ form_row(form.name) }}   {# = form_label + form_widget + form_errors #}
+    {{ form_row(form.email) }}
+    {{ form_row(form.password) }}
+
+    {# OU séparément pour plus de contrôle : #}
+    \u003Cdiv class="form-group"\u003E
+        {{ form_label(form.role) }}    {# Le label seul #}
+        {{ form_widget(form.role) }}   {# L'input seul #}
+        {{ form_errors(form.role) }}   {# Les erreurs seules #}
+    \u003C/div\u003E
+
+    \u003Cbutton type="submit" class="btn btn-primary"\u003ECréer\u003C/button\u003E
+
+{{ form_end(form) }}            {# \u003C/form\u003E + token CSRF caché #}
+
+---
+
+\u003C?php
+// src/Entity/User.php — CONTRAINTES DE VALIDATION
+use Symfony\\Component\\Validator\\Constraints as Assert;
+
+class User
+{
+    #[Assert\\NotBlank(message: 'Le nom est obligatoire')]
+    #[Assert\\Length(min: 2, max: 100, minMessage: 'Min 2 caractères')]
+    private string $name;
+
+    #[Assert\\NotBlank(message: 'L\'email est obligatoire')]
+    #[Assert\\Email(message: 'Format email invalide')]
+    private string $email;
+
+    #[Assert\\NotBlank]
+    #[Assert\\Length(min: 8, minMessage: 'Minimum 8 caractères')]
+    #[Assert\\Regex(pattern: '/[A-Z]/', message: 'Doit contenir une majuscule')]
+    private string $password;
+
+    #[Assert\\PositiveOrZero(message: 'L\'âge doit être positif')]
+    #[Assert\\LessThan(value: 150)]
+    private ?int $age = null;
+
+    #[Assert\\Url(message: 'URL invalide')]
+    private ?string $website = null;
+}`,
+        note:'✅ form_row() = form_label() + form_widget() + form_errors()\n\nLes fonctions à connaître :\n• form_row() → tout-en-un (recommandé)\n• form_widget() → seulement l\'input\n• form_label() → seulement le label\n• form_errors() → seulement les erreurs\n• form_start() / form_end() → balise \u003Cform\u003E',
+        tips:['form_row() est la méthode recommandée (tout-en-un)','Les contraintes se mettent sur l\'ENTITÉ (pas le formulaire)','#[Assert\\NotBlank] → champ obligatoire','#[Assert\\Email] → format email valide','form_end() génère automatiquement le token CSRF anti-attaque']
+      }
+    ],
+    quiz:[
+      {q:'De quelle classe PHP héritent tous les formulaires Symfony ?', opts:['AbstractForm','BaseType','AbstractType','FormBase'], ans:2},
+      {q:'Quelle méthode du contrôleur crée une instance de formulaire ?', opts:['makeForm()','buildForm()','createForm()','newForm()'], ans:2},
+      {q:'Comment vérifier qu\'un formulaire est soumis ET valide ?', opts:['$form->check()','$form->isSubmitted() && $form->isValid()','$form->validate()','$form->isOk()'], ans:1},
+      {q:'Laquelle de ces fonctions Twig affiche label + input + erreurs ?', opts:['form_widget()','form_label()','form_all()','form_row()'], ans:3},
+      {q:'Quelle contrainte Symfony vérifie qu\'un champ n\'est pas vide ?', opts:['#[Assert\\Required]','#[Assert\\NotBlank]','#[Assert\\NotNull]','#[Assert\\Filled]'], ans:1},
+      {q:'Où se placent les contraintes de validation en Symfony ?', opts:['Dans le FormType','Dans le contrôleur','Sur l\'entité','Dans services.yaml'], ans:2},
+      {q:'Pour mettre à jour un enregistrement, faut-il appeler persist() ?', opts:['Oui, toujours','Non, seulement flush() suffit si l\'entité est déjà gérée','Oui, puis flush()','Non, la mise à jour est automatique'], ans:1},
+      {q:'À quoi sert "mapped: false" dans un champ de formulaire ?', opts:['Désactive la validation','Le champ n\'est pas lié à une propriété de l\'entité','Cache le champ','Rend le champ optionnel'], ans:1}
+    ]
+  },
+  doctrine: {
+    id:'doctrine', icon:'🗄️', color:'teal', title:'Doctrine & Base de Données',
+    desc:'Entités, migrations, CRUD, relations OneToOne / OneToMany / ManyToMany',
+    accent:'#2dd4a8',
+    lessons:[
+      {
+        title:'Créer une entité Doctrine',
+        body:`<p>Une <strong>entité</strong> est une classe PHP qui correspond à une table en base de données. Doctrine gère automatiquement le SQL.</p>`,
+        code:`# ===== COMMANDES ESSENTIELLES =====
+$ php bin/console make:entity Product          # Créer l'entité
+$ php bin/console doctrine:database:create     # Créer la BDD
+$ php bin/console make:migration               # Générer le fichier SQL
+$ php bin/console doctrine:migrations:migrate  # Appliquer en BDD
+
+---
+
+\u003C?php
+// src/Entity/Product.php
+namespace App\\Entity;
+
+use App\\Repository\\ProductRepository;
+use Doctrine\\ORM\\Mapping as ORM;
+use Symfony\\Component\\Validator\\Constraints as Assert;
+
+#[ORM\\Entity(repositoryClass: ProductRepository::class)]
+#[ORM\\Table(name: 'products')]
+class Product
+{
+    #[ORM\\Id]
+    #[ORM\\GeneratedValue]
+    #[ORM\\Column]
+    private ?int $id = null;
+
+    #[ORM\\Column(length: 255)]
+    #[Assert\\NotBlank]
+    private ?string $name = null;
+
+    #[ORM\\Column(type: 'decimal', precision: 10, scale: 2)]
+    private ?float $price = null;
+
+    #[ORM\\Column(type: 'text', nullable: true)]
+    private ?string $description = null;
+
+    #[ORM\\Column]
+    private \\DateTimeImmutable $createdAt;
+
+    public function __construct()
+    {
+        $this-\u003EcreatedAt = new \\DateTimeImmutable();
+    }
+
+    // Getters & Setters (générés automatiquement par make:entity)
+    public function getId(): ?int { return $this-\u003Eid; }
+    public function getName(): ?string { return $this-\u003Ename; }
+    public function setName(string $name): static {
+        $this-\u003Ename = $name;
+        return $this;
+    }
+    // ...
+}`,
+        note:'',
+        tips:['make:entity génère la classe + getters/setters automatiquement','Les attributs #[ORM\\...] définissent le mapping PHP→SQL','make:migration analyse les différences et génère le SQL','doctrine:migrations:migrate applique le SQL en base']
+      },
+      {
+        title:'CRUD avec EntityManager et Repository',
+        body:`<p>L'<strong>EntityManager</strong> gère les opérations d'écriture (INSERT, UPDATE, DELETE). Le <strong>Repository</strong> gère les lectures (SELECT).</p>`,
+        code:`\u003C?php
+use Doctrine\\ORM\\EntityManagerInterface;
+use App\\Repository\\ProductRepository;
+
+class ProductController extends AbstractController
+{
+    public function __construct(
+        private EntityManagerInterface $em,
+        private ProductRepository $productRepo
+    ) {}
+
+    // ===== CRÉER (INSERT) =====
+    public function create(): Response
+    {
+        $product = new Product();
+        $product-\u003EsetName('iPhone 16');
+        $product-\u003EsetPrice(1099.99);
+        $product-\u003EsetDescription('Nouveau smartphone Apple');
+
+        $this-\u003Eem-\u003Epersist($product);  // "Je veux sauvegarder cet objet"
+        $this-\u003Eem-\u003Eflush();            // Exécute le SQL INSERT en BDD
+
+        return $this-\u003EredirectToRoute('products_list');
+    }
+
+    // ===== LIRE (SELECT) =====
+    public function list(): Response
+    {
+        $all      = $this-\u003EproductRepo-\u003EfindAll();             // Tous
+        $one      = $this-\u003EproductRepo-\u003Efind(42);              // Par ID
+        $by_name  = $this-\u003EproductRepo-\u003EfindBy(['name' =\u003E 'iPhone']); // Avec filtre
+        $one_by   = $this-\u003EproductRepo-\u003EfindOneBy(['name' =\u003E 'iPhone']); // Un seul
+        $ordered  = $this-\u003EproductRepo-\u003EfindBy([], ['price' =\u003E 'DESC']); // Trié
+
+        return $this-\u003Erender('product/list.html.twig', ['products' =\u003E $all]);
+    }
+
+    // ===== METTRE À JOUR (UPDATE) =====
+    public function update(Product $product): Response
+    {
+        $product-\u003EsetPrice(999.99);  // Modifier l'objet
+        // Pas besoin de persist() si l'entité est déjà "managée" par Doctrine
+        $this-\u003Eem-\u003Eflush();          // Exécute le SQL UPDATE
+
+        return $this-\u003EredirectToRoute('products_list');
+    }
+
+    // ===== SUPPRIMER (DELETE) =====
+    public function delete(Product $product): Response
+    {
+        $this-\u003Eem-\u003Eremove($product);  // "Je veux supprimer cet objet"
+        $this-\u003Eem-\u003Eflush();           // Exécute le SQL DELETE
+
+        return $this-\u003EredirectToRoute('products_list');
+    }
+}
+
+// ===== REPOSITORY PERSONNALISÉ =====
+class ProductRepository extends ServiceEntityRepository
+{
+    // Méthode personnalisée avec QueryBuilder
+    public function findExpensive(float $minPrice): array
+    {
+        return $this-\u003EcreateQueryBuilder('p')
+            -\u003Ewhere('p.price \u003E= :price')
+            -\u003EsetParameter('price', $minPrice)
+            -\u003EorderBy('p.price', 'DESC')
+            -\u003EsetMaxResults(10)
+            -\u003EgetQuery()
+            -\u003EgetResult();
+    }
+}`,
+        note:'💡 RÉSUMÉ :\n• persist() → marque pour INSERT (nouveau)\n• flush() → exécute TOUTES les opérations en attente\n• remove() → marque pour DELETE\n• Pour UPDATE : pas de persist(), juste flush()',
+        tips:['EntityManager → écriture (INSERT, UPDATE, DELETE)','Repository → lecture (SELECT)','persist() + flush() → INSERT','remove() + flush() → DELETE','Pour UPDATE : modifier l\'objet + flush() seulement']
+      },
+      {
+        title:'Relations Doctrine',
+        body:`<p>Doctrine gère les relations entre entités (tables). Voici les 3 types fondamentaux.</p>`,
+        code:`\u003C?php
+// ===== OneToOne — Un User ↔ Un Profil =====
+// Un utilisateur a UN seul profil. Un profil appartient à UN seul user.
+
+class User
+{
+    #[ORM\\OneToOne(targetEntity: Profile::class, cascade: ['persist', 'remove'])]
+    #[ORM\\JoinColumn(nullable: false)]
+    private Profile $profile;
+}
+
+// ===== OneToMany / ManyToOne — Un Auteur ↔ Plusieurs Livres =====
+// Un auteur peut avoir PLUSIEURS livres.
+// Chaque livre appartient à UN seul auteur.
+
+class Author
+{
+    #[ORM\\OneToMany(targetEntity: Book::class, mappedBy: 'author', cascade: ['persist'])]
+    private Collection $books;    // ← Collection (plusieurs)
+
+    public function __construct()
+    {
+        $this-\u003Ebooks = new ArrayCollection();
+    }
+}
+
+class Book
+{
+    #[ORM\\ManyToOne(targetEntity: Author::class, inversedBy: 'books')]
+    #[ORM\\JoinColumn(nullable: false)]
+    private Author $author;       // ← Entité simple (un seul)
+}
+
+// ===== ManyToMany — Produits ↔ Catégories =====
+// Un produit peut avoir PLUSIEURS catégories.
+// Une catégorie peut avoir PLUSIEURS produits.
+// → Doctrine crée une table intermédiaire automatiquement !
+
+class Product
+{
+    #[ORM\\ManyToMany(targetEntity: Category::class, inversedBy: 'products')]
+    #[ORM\\JoinTable(name: 'product_categories')]
+    private Collection $categories;
+}
+
+class Category
+{
+    #[ORM\\ManyToMany(targetEntity: Product::class, mappedBy: 'categories')]
+    private Collection $products;
+}
+
+// ===== UTILISER LES RELATIONS =====
+$author = new Author();
+$book = new Book();
+$book-\u003EsetAuthor($author);      // Lier le livre à l'auteur
+$em-\u003Epersist($book);
+$em-\u003Eflush();
+
+// Accéder aux livres d'un auteur :
+foreach ($author-\u003EgetBooks() as $book) {
+    echo $book-\u003EgetTitle();
+}`,
+        note:'',
+        tips:['OneToOne → 1 pour 1 (User ↔ Profile)','OneToMany / ManyToOne → 1 pour N (Author ↔ Books)','ManyToMany → N pour N (Products ↔ Categories) + table intermédiaire','cascade: [\'persist\'] → persiste automatiquement les objets liés','cascade: [\'remove\'] → supprime en cascade']
+      },
+      {
+        title:'Migrations et #[MapEntity]',
+        body:`<p>Les migrations synchronisent les entités PHP avec la base de données. <code>#[MapEntity]</code> permet l'injection automatique avec 404 si absent.</p>`,
+        code:`# ===== WORKFLOW RECOMMANDÉ =====
+
+# 1. Modifier votre entité (ajouter un champ, une relation...)
+$ php bin/console make:entity Product   # Ajouter un champ
+
+# 2. Générer le fichier de migration
+$ php bin/console make:migration
+# → Crée migrations/Version20260604XXXXXX.php avec le SQL
+
+# 3. Vérifier le SQL généré (important !)
+# Ouvrir le fichier et lire le SQL avant d'appliquer
+
+# 4. Appliquer la migration
+$ php bin/console doctrine:migrations:migrate
+
+# ⚠️ doctrine:database:update --force est DÉCONSEILLÉ en production !
+# Toujours utiliser les migrations.
+
+---
+
+\u003C?php
+// ===== #[MapEntity] — Injection automatique avec 404 =====
+
+// AVANT (sans MapEntity) :
+#[Route('/books/{id}', name: 'book_show')]
+public function show(int $id, BookRepository $repo): Response
+{
+    $book = $repo-\u003Efind($id);
+    if (!$book) {
+        throw $this-\u003EcreateNotFoundException('Livre introuvable');
+    }
+    return $this-\u003Erender('book/show.html.twig', ['book' =\u003E $book]);
+}
+
+// APRÈS (avec MapEntity) — plus concis !
+#[Route('/books/{id}', name: 'book_show', methods: ['GET'])]
+public function show(
+    #[MapEntity(id: 'id')] Book $book  // ← Auto-fetch + 404 automatique !
+): Response {
+    // Si le livre n'existe pas → Symfony lance automatiquement une 404
+    return $this-\u003Erender('book/show.html.twig', ['book' =\u003E $book]);
+}
+
+// Avec un paramètre personnalisé (ISBN par exemple) :
+#[Route('/books/{isbn}', name: 'book_by_isbn',
+    requirements: ['isbn' =\u003E '\\w+']
+)]
+public function showByIsbn(
+    #[MapEntity(mapping: ['isbn' =\u003E 'isbn'])] Book $book
+): Response {
+    return $this-\u003Erender('book/show.html.twig', ['book' =\u003E $book]);
+}`,
+        note:'',
+        tips:['make:migration → génère le SQL des changements','doctrine:migrations:migrate → applique en BDD','#[MapEntity] → fetch automatique + 404 si absent','La classe Repository est DÉDIÉE à la lecture (Design Pattern Repository)','Doctrine peut aussi exécuter du SQL natif via $em->getConnection()']
+      }
+    ],
+    quiz:[
+      {q:'Quelle commande Symfony crée une entité Doctrine ?', opts:['php bin/console make:entity','php bin/console create:entity','php bin/console doctrine:entity','php bin/console generate:entity'], ans:0},
+      {q:'Quelle commande génère un fichier de migration ?', opts:['php bin/console doctrine:migrate','php bin/console make:migration','php bin/console migration:create','php bin/console db:migrate'], ans:1},
+      {q:'Quelle méthode Doctrine prépare un objet pour l\'insertion ?', opts:['save()','insert()','persist()','add()'], ans:2},
+      {q:'Quelle méthode exécute réellement les opérations en base de données ?', opts:['execute()','save()','commit()','flush()'], ans:3},
+      {q:'Un auteur peut avoir plusieurs livres. Quel type de relation Doctrine ?', opts:['OneToOne','ManyToMany','OneToMany','ManyToOne'], ans:2},
+      {q:'Avec #[MapEntity], que se passe-t-il si l\'entité n\'existe pas ?', opts:['Retourne null','Lance une 404 automatiquement','Lance une 500','Retourne false'], ans:1},
+      {q:'La classe Repository est dédiée à la lecture depuis la BDD. C\'est ?', opts:['Faux, elle gère aussi l\'écriture','Vrai, c\'est le Repository Design Pattern','Faux, c\'est l\'EntityManager qui lit','Vrai mais seulement pour les entités simples'], ans:1},
+      {q:'Pour une mise à jour (UPDATE), faut-il appeler persist() ?', opts:['Oui, toujours obligatoire','Non, seulement flush() si l\'entité est managée','Oui, puis flush()','Non, c\'est automatique'], ans:1}
+    ]
+  },
+  security: {
+    id:'security', icon:'🔒', color:'purple', title:'Sécurité Symfony',
+    desc:'Authentification, autorisation, firewalls, rôles, Authenticator, Passport',
+    accent:'#7c6ef7',
+    lessons:[
+      {
+        title:'Les 2 axes et la configuration',
+        body:`<p>La sécurité Symfony repose sur <strong>2 concepts fondamentaux</strong> qu'il faut bien distinguer :</p>`,
+        code:`# ===== LES 2 AXES =====
+# 1. AUTHENTIFICATION → Qui es-tu ? (Login)
+# 2. AUTORISATION     → As-tu le droit ? (Rôles, Access Control)
+
+# ===== config/packages/security.yaml =====
+security:
+    # Algorithme de hachage des mots de passe
+    password_hashers:
+        App\\Entity\\User:
+            algorithm: auto   # bcrypt ou argon2i selon la plateforme
+
+    # Comment charger l'utilisateur depuis la BDD
+    providers:
+        app_user_provider:
+            entity:
+                class: App\\Entity\\User
+                property: email    # Identifier = email
+
+    # Zones de sécurité (firewalls)
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false    # Pas de sécurité pour le profiler Symfony
+        main:
+            lazy: true
+            provider: app_user_provider
+            custom_authenticator: App\\Security\\AppAuthenticator
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                default_target_path: app_dashboard
+            logout:
+                path: app_logout
+                target: app_login
+
+    # Contrôle d'accès par URL (YAML)
+    access_control:
+        - { path: ^/admin, roles: ROLE_ADMIN }   # /admin → admins seulement
+        - { path: ^/profile, roles: ROLE_USER }  # /profile → connectés
+        # Les URLs non listées sont publiques
+
+# ===== LE RÔLE DES FIREWALLS =====
+# Les firewalls définissent des ZONES de l'application.
+# Chaque zone peut avoir sa propre logique d'authentification.
+# Ex: main pour le site web, api pour les endpoints API.`,
+        note:'',
+        tips:['Authentification = vérifier l\'identité (Login)','Autorisation = vérifier les droits (Rôles)','Firewalls = zones de sécurité de l\'application','access_control → restriction par URL dans security.yaml']
+      },
+      {
+        title:'UserInterface et UserProvider',
+        body:`<p>L'entité User doit implémenter <code>UserInterface</code> pour que Symfony puisse l'utiliser. Le <code>UserProvider</code> charge l'utilisateur depuis la BDD.</p>`,
+        code:`# Générer l'entité User avec sécurité :
+$ php bin/console make:user
+
+\u003C?php
+// src/Entity/User.php
+namespace App\\Entity;
+
+use Doctrine\\ORM\\Mapping as ORM;
+use Symfony\\Component\\Security\\Core\\User\\UserInterface;
+use Symfony\\Component\\Security\\Core\\User\\PasswordAuthenticatedUserInterface;
+
+#[ORM\\Entity(repositoryClass: UserRepository::class)]
+class User implements UserInterface, PasswordAuthenticatedUserInterface
+{
+    #[ORM\\Id, ORM\\GeneratedValue, ORM\\Column]
+    private ?int $id = null;
+
+    #[ORM\\Column(length: 180, unique: true)]
+    private ?string $email = null;
+
+    #[ORM\\Column]
+    private array $roles = [];
+
+    #[ORM\\Column]
+    private ?string $password = null;
+
+    // ===== MÉTHODES REQUISES PAR UserInterface =====
+
+    // Identifiant unique de l'utilisateur (email, username...)
+    public function getUserIdentifier(): string
+    {
+        return (string) $this-\u003Eemail;
+    }
+
+    // Retourne les rôles de l'utilisateur
+    public function getRoles(): array
+    {
+        $roles = $this-\u003Eroles;
+        $roles[] = 'ROLE_USER';   // ← Toujours ROLE_USER par défaut !
+        return array_unique($roles);
+    }
+
+    // Efface les données sensibles après authentification
+    public function eraseCredentials(): void
+    {
+        // $this-\u003EplainPassword = null;
+    }
+
+    // Requis par PasswordAuthenticatedUserInterface
+    public function getPassword(): ?string
+    {
+        return $this-\u003Epassword;
+    }
+
+    // Getters/Setters...
+}
+
+// ===== POURQUOI UserInterface ? =====
+// → Symfony SAIT comment identifier l'utilisateur (getUserIdentifier)
+// → Symfony SAIT comment obtenir ses rôles (getRoles)
+// → Symfony SAIT comment effacer les données sensibles (eraseCredentials)
+// Sans UserInterface, le système de sécurité ne peut pas fonctionner !
+
+// ===== UserProvider =====
+// Permet à Symfony de CHARGER l'utilisateur depuis la BDD
+// (configuré dans security.yaml via providers: entity: class:)`,
+        note:'',
+        tips:['UserInterface = contrat obligatoire pour utiliser Symfony Security','getUserIdentifier() = l\'identifiant unique (email ou username)','getRoles() = TOUJOURS inclure ROLE_USER par défaut','make:user génère tout automatiquement (recommandé)']
+      },
+      {
+        title:'Authenticator, Passport et Rôles',
+        body:`<p>L'<strong>Authenticator</strong> gère le processus d'authentification. Le <strong>Passport</strong> encapsule les credentials. On peut vérifier les rôles de plusieurs façons.</p>`,
+        code:`\u003C?php
+// src/Security/AppAuthenticator.php
+namespace App\\Security;
+
+use Symfony\\Component\\Security\\Http\\Authenticator\\AbstractLoginFormAuthenticator;
+use Symfony\\Component\\Security\\Http\\Authenticator\\Passport\\Passport;
+use Symfony\\Component\\Security\\Http\\Authenticator\\Passport\\Credentials\\PasswordCredentials;
+use Symfony\\Component\\Security\\Http\\Authenticator\\Passport\\Badge\\UserBadge;
+use Symfony\\Component\\Security\\Http\\Authenticator\\Passport\\Badge\\CsrfTokenBadge;
+
+class AppAuthenticator extends AbstractLoginFormAuthenticator
+{
+    // ✅ Méthode 1 : supports() — Cette requête doit-elle être traitée ?
+    public function supports(Request $request): bool
+    {
+        return $request-\u003EisMethod('POST')
+            && $this-\u003EgetLoginUrl($request) === $request-\u003EgetPathInfo();
+    }
+
+    // ✅ Méthode 2 : authenticate() — Créer le Passport
+    public function authenticate(Request $request): Passport
+    {
+        $email    = $request-\u003Erequest-\u003Eget('email', '');
+        $password = $request-\u003Erequest-\u003Eget('password', '');
+        $csrf     = $request-\u003Erequest-\u003Eget('_csrf_token', '');
+
+        return new Passport(
+            new UserBadge($email),              // Charge l'user via email
+            new PasswordCredentials($password), // Vérifie le mot de passe
+            [new CsrfTokenBadge('authenticate', $csrf)]  // Validation CSRF
+        );
+        // Le Passport encapsule TOUT ce dont Symfony a besoin pour auth
+    }
+
+    // ✅ Méthode 3 : onAuthenticationSuccess() — Après succès
+    public function onAuthenticationSuccess(Request $request, ...): ?Response
+    {
+        // Rediriger vers la page demandée ou le dashboard
+        return new RedirectResponse($this-\u003EurlGenerator-\u003Egenerate('app_dashboard'));
+    }
+
+    // ✅ Méthode 4 : onAuthenticationFailure() — Après échec
+    public function onAuthenticationFailure(Request $request, ...): Response
+    {
+        $request-\u003EgetSession()-\u003Eset('_security.last_error', $exception-\u003EgetMessage());
+        return new RedirectResponse($this-\u003EurlGenerator-\u003Egenerate('app_login'));
+    }
+
+    protected function getLoginUrl(Request $request): string
+    {
+        return $this-\u003EurlGenerator-\u003Egenerate('app_login');
+    }
+}
+
+// ===== VÉRIFIER LES RÔLES — 3 FAÇONS =====
+
+// Façon 1 : Dans le contrôleur — lève une exception 403 si pas le rôle
+$this-\u003EdenyAccessUnlessGranted('ROLE_ADMIN');
+
+// Façon 2 : Dans le contrôleur — retourne true/false
+if ($this-\u003EisGranted('ROLE_ADMIN')) { ... }
+
+// Façon 3 : Attribut PHP sur la méthode/classe (recommandé)
+#[IsGranted('ROLE_ADMIN')]
+public function adminPanel(): Response { ... }
+
+// Façon 4 : Dans Twig
+{% if is_granted('ROLE_ADMIN') %}
+    \u003Ca href="/admin"\u003EAdmin\u003C/a\u003E
+{% endif %}
+
+// Façon 5 : Dans security.yaml (access_control)
+access_control:
+    - { path: ^/admin, roles: ROLE_ADMIN }
+
+// ===== RÉCUPÉRER L'UTILISATEUR CONNECTÉ =====
+// En PHP (contrôleur) :
+$user = $this-\u003EgetUser();                       // Via AbstractController
+
+// Via Security :
+use Symfony\\Bundle\\SecurityBundle\\Security;
+$user = $security-\u003EgetUser();
+
+// Via le token :
+$token = $tokenStorage-\u003EgetToken();
+$user = $token?-\u003EgetUser();
+
+// En Twig :
+{{ app.user.email }}`,
+        note:'',
+        tips:['Authenticator = classe qui gère le flow d\'authentification','Passport = encapsule les credentials (email + password + CSRF)','Méthodes à implémenter : supports(), authenticate(), onAuthenticationSuccess()','3 façons vérifier les rôles : denyAccessUnlessGranted(), isGranted(), #[IsGranted]','3 façons récupérer l\'user : getUser(), Security::getUser(), app.user en Twig']
+      }
+    ],
+    quiz:[
+      {q:'Quels sont les 2 axes de la sécurité Symfony ?', opts:['Login et Logout','Authentification et Autorisation','UserInterface et UserProvider','Firewall et AccessControl'], ans:1},
+      {q:'Quelle commande Symfony crée l\'entité User avec sécurité ?', opts:['make:entity User','make:user','security:create-user','make:security'], ans:1},
+      {q:'Quelle interface doit implémenter l\'entité User ?', opts:['SecurityInterface','AuthInterface','UserInterface','LoginInterface'], ans:2},
+      {q:'À quoi sert un UserProvider dans Symfony ?', opts:['Chiffrer les mots de passe','Charger l\'utilisateur depuis la BDD','Gérer les rôles','Configurer les firewalls'], ans:1},
+      {q:'Quelle méthode de l\'Authenticator crée le Passport ?', opts:['supports()','login()','authenticate()','check()'], ans:2},
+      {q:'Comment restreindre /admin aux ROLE_ADMIN en YAML ?', opts:['{ path: ^/admin, role: ADMIN }','{ path: ^/admin, roles: ROLE_ADMIN }','{ url: /admin, auth: ROLE_ADMIN }','{ route: admin, roles: [ADMIN] }'], ans:1},
+      {q:'Quel rôle Symfony donne-t-il par défaut à tout utilisateur connecté ?', opts:['ROLE_CONNECTED','ROLE_DEFAULT','ROLE_USER','ROLE_BASE'], ans:2},
+      {q:'Comment récupérer l\'utilisateur connecté dans un contrôleur ?', opts:['$request->getUser()','$this->getUser()','User::getCurrent()','$session->getUser()'], ans:1}
+    ]
+  }
+};
+
+const FLASHCARDS = [
+  {q:'#[Route]', a:'Attribut PHP 8 qui définit l\'URL déclenchant une méthode de contrôleur'},
+  {q:'AbstractController', a:'Classe de base des contrôleurs Symfony (render, json, redirectToRoute, createNotFoundException...)'},
+  {q:'createNotFoundException()', a:'Lance une exception HTTP 404 Not Found'},
+  {q:'redirectToRoute()', a:'Redirige vers une route nommée (retourne RedirectResponse)'},
+  {q:'isXmlHttpRequest()', a:'Vérifie si la requête HTTP courante est de type AJAX (XMLHttpRequest)'},
+  {q:'$request->request->get()', a:'Récupère les données POST d\'un formulaire HTML'},
+  {q:'$request->query->get()', a:'Récupère les paramètres GET d\'une URL (?key=value)'},
+  {q:'debug:router', a:'Commande CLI qui liste toutes les routes du projet Symfony'},
+  {q:'priority', a:'Option de #[Route] qui contrôle l\'ordre d\'évaluation des routes (valeur plus haute = prioritaire)'},
+  {q:'{{ variable }}', a:'Affiche la valeur d\'une variable en Twig (double accolades)'},
+  {q:'{% extends %}', a:'Hérite d\'un template parent en Twig'},
+  {q:'{% block %}', a:'Définit une zone remplaçable dans un template Twig'},
+  {q:'{{ parent() }}', a:'Inclut le contenu du bloc parent dans un bloc enfant Twig'},
+  {q:'asset()', a:'Génère l\'URL d\'un fichier statique CSS/JS/image dans Twig'},
+  {q:'path()', a:'Génère une URL relative vers une route nommée dans Twig'},
+  {q:'absolute_url()', a:'Génère une URL absolue (avec https://domaine.com) dans Twig'},
+  {q:'include()', a:'Inclut un template partiel dans un autre template Twig'},
+  {q:'app.user', a:'Variable Twig qui retourne l\'utilisateur actuellement connecté'},
+  {q:'is_granted()', a:'Fonction Twig qui vérifie si l\'utilisateur a un rôle donné'},
+  {q:'Service Container', a:'Cœur de Symfony qui instancie et gère tous les services (objets) de l\'application'},
+  {q:'config/services.yaml', a:'Fichier de configuration principal du Service Container Symfony'},
+  {q:'autowire: true', a:'Active l\'injection automatique des dépendances via les types PHP (type hints)'},
+  {q:'autoconfigure: true', a:'Configure automatiquement les tags des services (EventListener, Command, etc.)'},
+  {q:'debug:container', a:'Commande CLI qui liste tous les services enregistrés dans le container'},
+  {q:'AbstractType', a:'Classe de base dont héritent tous les formulaires Symfony (FormType)'},
+  {q:'createForm()', a:'Méthode du contrôleur qui crée une instance de formulaire à partir d\'une classe FormType'},
+  {q:'handleRequest()', a:'Traite la requête HTTP et lie les données POST au formulaire Symfony'},
+  {q:'isSubmitted() && isValid()', a:'Vérifie que le formulaire est soumis (POST) ET que les données sont valides'},
+  {q:'form_row()', a:'Fonction Twig qui affiche label + input + erreurs d\'un champ de formulaire'},
+  {q:'persist()', a:'Marque un objet Doctrine pour insertion en base de données (suivi par flush)'},
+  {q:'flush()', a:'Exécute toutes les opérations Doctrine en attente (INSERT, UPDATE, DELETE)'},
+  {q:'remove()', a:'Marque un objet Doctrine pour suppression (à suivre de flush())'},
+  {q:'make:entity', a:'Commande Symfony qui génère une entité Doctrine avec ses getters et setters'},
+  {q:'make:migration', a:'Génère un fichier de migration SQL à partir des changements d\'entités'},
+  {q:'UserInterface', a:'Interface PHP que doit implémenter l\'entité User pour le système de sécurité Symfony'},
+  {q:'Passport', a:'Objet Symfony Security qui encapsule les credentials (UserBadge + PasswordCredentials)'},
+];
+
+// ===== STATE =====
+let state = {
+  view: 'home',
+  moduleId: null,
+  lessonIdx: 0,
+  tab: 'lessons',
+  quizIdx: 0,
+  quizAnswers: [],
+  quizDone: false,
+  fcIdx: 0,
+  fcFlipped: false,
+  progress: {},
+  examStarted: false
+};
+
+// ===== NAVIGATION =====
+function setActiveNav(id) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('nav-' + id);
+  if (el) el.classList.add('active');
+}
+
+function showHome() {
+  state.view = 'home';
+  setActiveNav('home');
+  closeSidebar();
+  renderContent();
+}
+
+function showModule(id) {
+  state.view = 'module';
+  state.moduleId = id;
+  state.lessonIdx = 0;
+  state.tab = 'lessons';
+  state.quizIdx = 0;
+  state.quizAnswers = [];
+  state.quizDone = false;
+  setActiveNav(id);
+  closeSidebar();
+  renderContent();
+  window.scrollTo(0, 0);
+}
+
+function showFlashcards() {
+  state.view = 'flashcards';
+  state.fcIdx = 0;
+  state.fcFlipped = false;
+  setActiveNav('fc');
+  closeSidebar();
+  renderContent();
+  window.scrollTo(0, 0);
+}
+
+function showExam() {
+  state.view = 'exam';
+  state.quizIdx = 0;
+  state.quizAnswers = [];
+  state.quizDone = false;
+  state.examStarted = false;
+  setActiveNav('exam');
+  closeSidebar();
+  renderContent();
+  window.scrollTo(0, 0);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ===== SEARCH =====
+function handleSearch(val) {
+  if (!val.trim()) return;
+  const q = val.toLowerCase();
+  for (const [id, m] of Object.entries(MODULES)) {
+    for (let i = 0; i < m.lessons.length; i++) {
+      const l = m.lessons[i];
+      if (l.title.toLowerCase().includes(q) || (l.body||'').toLowerCase().includes(q) || (l.code||'').toLowerCase().includes(q)) {
+        state.view = 'module';
+        state.moduleId = id;
+        state.lessonIdx = i;
+        state.tab = 'lessons';
+        setActiveNav(id);
+        renderContent();
+        return;
+      }
+    }
+  }
+}
+
+// ===== RENDER =====
+function renderContent() {
+  const c = document.getElementById('content');
+  c.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'fade-in';
+  if (state.view === 'home') el.innerHTML = buildHome();
+  else if (state.view === 'module') el.innerHTML = buildModule();
+  else if (state.view === 'flashcards') el.innerHTML = buildFlashcards();
+  else if (state.view === 'exam') el.innerHTML = buildExam();
+  c.appendChild(el);
+  updateProgress();
+}
+
+// ===== HOME =====
+function buildHome() {
+  const cards = Object.values(MODULES).map(m => {
+    const pMap = {purple:'#7c6ef7',teal:'#2dd4a8',coral:'#f07a5a',amber:'#f5c842'};
+    const bMap = {purple:'rgba(124,110,247,0.12)',teal:'rgba(45,212,168,0.1)',coral:'rgba(240,122,90,0.1)',amber:'rgba(245,200,66,0.1)'};
+    const accent = m.accent || pMap[m.color] || '#7c6ef7';
+    const bg = bMap[m.color] || 'rgba(124,110,247,0.12)';
+    return `<div class="module-card" onclick="showModule('${m.id}')" style="--card-accent:${accent}">
+      <div class="card-head">
+        <div class="card-icon" style="background:${bg}">${m.icon}</div>
+        <div class="card-meta">
+          <div class="card-title">${m.title}</div>
+          <div class="card-sub">${m.lessons.length} leçons · ${m.quiz.length} questions</div>
+        </div>
+      </div>
+      <p class="card-desc">${m.desc}</p>
+      <div class="card-footer">
+        <div class="card-pills">
+          <span class="pill" style="background:${bg};color:${accent}">PHP</span>
+          <span class="pill" style="background:${bg};color:${accent}">Symfony</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+<div class="home-hero">
+  <div class="hero-tag">⚡ Préparez votre examen EHEIO 2026</div>
+  <h1>Apprenez <span class="hero-gradient">Symfony</span><br>de A à Z</h1>
+  <p>Plateforme d'apprentissage interactive avec leçons, exemples de code, quiz et flashcards pour maîtriser Symfony et préparer vos examens.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-num">6</div><div class="hero-stat-lbl">Modules</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">21</div><div class="hero-stat-lbl">Leçons</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">48</div><div class="hero-stat-lbl">Questions de quiz</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">36</div><div class="hero-stat-lbl">Flashcards</div></div>
+  </div>
+</div>
+<p class="section-title">Modules de cours</p>
+<div class="modules-grid">${cards}</div>
+<p class="section-title">Révision rapide</p>
+<div class="quick-grid">
+  <div class="quick-card" onclick="showFlashcards()">
+    <div class="quick-icon">🃏</div>
+    <div>
+      <div class="quick-title">Flashcards</div>
+      <div class="quick-sub">36 cartes — termes et définitions clés</div>
+    </div>
+  </div>
+  <div class="quick-card" onclick="showExam()">
+    <div class="quick-icon">📋</div>
+    <div>
+      <div class="quick-title">Examen Blanc</div>
+      <div class="quick-sub">48 questions — simulation complète</div>
+    </div>
+  </div>
+</div>`;
+}
+
+// ===== MODULE =====
+function buildModule() {
+  const m = MODULES[state.moduleId];
+  if (!m) return buildHome();
+
+  const lessonNav = m.lessons.map((l, i) => `
+    <button class="lesson-nav-item ${state.lessonIdx === i ? 'active' : ''}"
+      onclick="goLesson(${i})">
+      <span class="lesson-num">${i+1}</span>
+      ${l.title}
+    </button>`).join('');
+
+  const tabBtns = `
+    <div class="module-tabs">
+      <button class="tab-btn ${state.tab==='lessons'?'active':''}" onclick="setTab('lessons')">📚 Leçons</button>
+      <button class="tab-btn ${state.tab==='quiz'?'active':''}" onclick="setTab('quiz')">🧪 Quiz</button>
+    </div>`;
+
+  let tabContent = '';
+  if (state.tab === 'lessons') {
+    const l = m.lessons[state.lessonIdx];
+    const tips = (l.tips && l.tips.length) ? `
+      <div class="tips-box">
+        <div class="tips-title">💡 Points clés</div>
+        ${l.tips.map(t => `<div class="tip-item"><span class="tip-arrow">›</span><span>${t}</span></div>`).join('')}
+      </div>` : '';
+    const note = l.note ? `<div class="note-box">${l.note}</div>` : '';
+    const code = l.code ? `<pre class="code-block">${highlight(esc(l.code))}</pre>` : '';
+    const prevBtn = state.lessonIdx > 0
+      ? `<button class="btn-secondary" onclick="goLesson(${state.lessonIdx-1})">← Précédent</button>`
+      : '<span></span>';
+    const nextBtn = state.lessonIdx < m.lessons.length - 1
+      ? `<button class="btn-go" onclick="goLesson(${state.lessonIdx+1})">Suivant →</button>`
+      : `<button class="btn-go" onclick="setTab('quiz')">Faire le quiz ✓</button>`;
+
+    tabContent = `
+      <div class="lesson-wrap">
+        <div class="lesson-nav-list">${lessonNav}</div>
+        <div class="lesson-content">
+          <h2 class="lesson-title">${l.title}</h2>
+          <div class="lesson-body">${l.body||''}</div>
+          ${tips}
+          ${code}
+          ${note}
+          <div class="lesson-nav-btns">${prevBtn}${nextBtn}</div>
+        </div>
+      </div>`;
+  } else {
+    tabContent = buildQuiz(m);
+  }
+
+  return `
+<div class="breadcrumb">
+  <span class="crumb-link" onclick="showHome()">🏠 Accueil</span>
+  <span class="sep">/</span>
+  <span class="crumb-current">${m.title}</span>
+</div>
+<div class="module-header">
+  <span class="module-header-icon">${m.icon}</span>
+  <div>
+    <div class="module-header-title">${m.title}</div>
+    <div class="module-header-desc">${m.desc}</div>
+  </div>
+</div>
+${tabBtns}
+${tabContent}`;
+}
+
+function buildQuiz(m) {
+  if (state.quizDone) {
+    const score = state.quizAnswers.filter((a, i) => a === m.quiz[i].ans).length;
+    const pct = Math.round(score / m.quiz.length * 100);
+    const clr = pct >= 80 ? '#2dd4a8' : pct >= 50 ? '#f5c842' : '#f06060';
+    const reviews = m.quiz.map((q, i) => {
+      const ok = state.quizAnswers[i] === q.ans;
+      return `<div class="review-item">
+        <div class="review-q">${i+1}. ${q.q}</div>
+        <div class="review-ans" style="color:${ok?'#2dd4a8':'#f06060'}">
+          ${ok ? '✅' : '❌'} ${q.opts[q.ans]}
+          ${!ok ? `<span style="color:var(--text3)"> · Votre réponse : ${q.opts[state.quizAnswers[i]]??'—'}</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="result-wrap">
+      <div class="result-score" style="color:${clr}">${pct}%</div>
+      <div class="result-label">${score}/${m.quiz.length} bonnes réponses</div>
+      <div class="result-msg">${pct>=80?'🎉 Excellent ! Vous maîtrisez ce module.':pct>=50?'📚 Bien ! Continuez à réviser.':'💪 Relisez les leçons et réessayez !'}</div>
+      <div class="result-grid">
+        <div class="result-stat"><div class="result-stat-num" style="color:#2dd4a8">${score}</div><div class="result-stat-lbl">Correctes</div></div>
+        <div class="result-stat"><div class="result-stat-num" style="color:#f06060">${m.quiz.length-score}</div><div class="result-stat-lbl">Incorrectes</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:1.5rem">
+        <button class="btn-go" style="flex:1" onclick="resetQuiz()">Recommencer</button>
+        <button class="btn-secondary" style="flex:1" onclick="setTab('lessons')">Revoir les leçons</button>
+      </div>
+      <div class="review-list">${reviews}</div>
+    </div>`;
+  }
+
+  const q = m.quiz[state.quizIdx];
+  const pct = Math.round(state.quizIdx / m.quiz.length * 100);
+  const answered = state.quizAnswers[state.quizIdx] !== undefined;
+  const userAns = state.quizAnswers[state.quizIdx];
+
+  const opts = q.opts.map((o, i) => {
+    let cls = '';
+    if (answered) {
+      if (i === q.ans) cls = 'correct';
+      else if (i === userAns) cls = 'wrong';
+    }
+    return `<button class="quiz-opt ${cls}" ${answered?'disabled':''} onclick="answerQuiz(${i})">
+      <span class="opt-letter">${String.fromCharCode(65+i)}</span>
+      ${esc(o)}
+    </button>`;
+  }).join('');
+
+  const nextBtn = answered ? `
+    <div class="quiz-next">
+      ${state.quizIdx < m.quiz.length-1
+        ? `<button class="btn-go" onclick="nextQ()">Question suivante →</button>`
+        : `<button class="btn-go" onclick="finishQuiz()">Voir les résultats ✓</button>`}
+    </div>` : '';
+
+  return `<div class="quiz-wrap">
+    <div class="quiz-header">
+      <span class="quiz-counter">Question ${state.quizIdx+1}/${m.quiz.length}</span>
+      <div class="quiz-progress"><div class="quiz-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="quiz-question">${esc(q.q)}</div>
+    <div class="quiz-opts">${opts}</div>
+    ${nextBtn}
+  </div>`;
+}
+
+// ===== FLASHCARDS =====
+function buildFlashcards() {
+  const fc = FLASHCARDS[state.fcIdx];
+  const dots = FLASHCARDS.map((_, i) => `<div class="fc-dot ${i<state.fcIdx?'done':i===state.fcIdx?'current':''}"></div>`).join('');
+  return `
+<div class="breadcrumb">
+  <span class="crumb-link" onclick="showHome()">🏠 Accueil</span>
+  <span class="sep">/</span>
+  <span class="crumb-current">Flashcards</span>
+</div>
+<div class="fc-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <h2 style="font-family:var(--display);font-size:17px;font-weight:600">Flashcards Symfony</h2>
+    <span style="font-size:13px;color:var(--text3)">${state.fcIdx+1} / ${FLASHCARDS.length}</span>
+  </div>
+  <div style="height:4px;background:var(--bg4);border-radius:2px;margin-bottom:1.5rem;overflow:hidden">
+    <div style="height:100%;width:${Math.round((state.fcIdx+1)/FLASHCARDS.length*100)}%;background:linear-gradient(90deg,var(--purple),var(--teal));border-radius:2px;transition:width 0.4s ease"></div>
+  </div>
+  <div class="fc-card" onclick="flipCard()">
+    <div class="fc-label">${state.fcFlipped ? 'Définition' : 'Terme'}</div>
+    ${state.fcFlipped
+      ? `<div class="fc-def">${esc(fc.a)}</div>`
+      : `<div class="fc-term">${esc(fc.q)}</div>`}
+    <div class="fc-hint">Cliquer pour ${state.fcFlipped ? 'voir le terme' : 'voir la définition'}</div>
+  </div>
+  <div class="fc-controls">
+    <button class="btn-secondary" onclick="prevFC()" ${state.fcIdx===0?'disabled':''}>← Précédente</button>
+    <button class="btn-go" onclick="nextFC()">${state.fcIdx<FLASHCARDS.length-1?'Suivante →':'Recommencer ↺'}</button>
+  </div>
+  <div class="fc-dots" style="margin-top:1rem">${dots}</div>
+</div>`;
+}
+
+// ===== EXAM =====
+function buildExam() {
+  const allQ = Object.values(MODULES).flatMap(m =>
+    m.quiz.map(q => ({...q, module: m.title}))
+  );
+
+  if (!state.examStarted) {
+    return `
+<div class="exam-hero">
+  <h1 class="exam-title">📋 Examen Blanc Symfony</h1>
+  <p class="exam-sub">Inspiré de l'examen EHEIO 2026 — Toutes les thématiques couvertes</p>
+  <div class="exam-meta">
+    <div class="exam-meta-item"><div class="exam-meta-num">${allQ.length}</div><div class="exam-meta-lbl">Questions</div></div>
+    <div class="exam-meta-item"><div class="exam-meta-num">6</div><div class="exam-meta-lbl">Modules</div></div>
+    <div class="exam-meta-item"><div class="exam-meta-num">QCM</div><div class="exam-meta-lbl">Format</div></div>
+  </div>
+  <p style="font-size:13px;color:var(--text3);margin-bottom:1.5rem;max-width:420px;margin-left:auto;margin-right:auto">
+    Les questions couvrent : Routing, Twig, Injection de dépendances, Formulaires, Doctrine et Sécurité.
+  </p>
+  <button class="btn-primary" style="font-size:15px;padding:12px 32px" onclick="startExam()">Commencer l'examen →</button>
+</div>`;
+  }
+
+  if (state.quizDone) {
+    const score = state.quizAnswers.filter((a, i) => a === allQ[i].ans).length;
+    const pct = Math.round(score / allQ.length * 100);
+    const clr = pct >= 80 ? '#2dd4a8' : pct >= 50 ? '#f5c842' : '#f06060';
+    const reviews = allQ.map((q, i) => {
+      const ok = state.quizAnswers[i] === q.ans;
+      return `<div class="review-item">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">${q.module}</div>
+        <div class="review-q">${i+1}. ${q.q}</div>
+        <div class="review-ans" style="color:${ok?'#2dd4a8':'#f06060'}">
+          ${ok?'✅':'❌'} ${q.opts[q.ans]}
+          ${!ok?`<span style="color:var(--text3)"> · Votre réponse : ${q.opts[state.quizAnswers[i]]??'—'}</span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="result-wrap" style="max-width:680px;margin:0 auto">
+      <div class="result-score" style="color:${clr}">${pct}%</div>
+      <div class="result-label">${score}/${allQ.length} bonnes réponses</div>
+      <div class="result-msg">${pct>=80?'🎉 Excellent ! Vous êtes prêt pour l\'examen !':pct>=50?'📚 Bon travail ! Continuez à réviser les modules faibles.':'💪 Relisez les modules et réessayez !'}</div>
+      <div class="result-grid">
+        <div class="result-stat"><div class="result-stat-num" style="color:#2dd4a8">${score}</div><div class="result-stat-lbl">Correctes</div></div>
+        <div class="result-stat"><div class="result-stat-num" style="color:#f06060">${allQ.length-score}</div><div class="result-stat-lbl">Incorrectes</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:1.5rem">
+        <button class="btn-go" style="flex:1" onclick="startExam()">Recommencer</button>
+        <button class="btn-secondary" style="flex:1" onclick="showHome()">Retour à l'accueil</button>
+      </div>
+      <div class="review-list">${reviews}</div>
+    </div>`;
+  }
+
+  const q = allQ[state.quizIdx];
+  const pct = Math.round(state.quizIdx / allQ.length * 100);
+  const answered = state.quizAnswers[state.quizIdx] !== undefined;
+  const userAns = state.quizAnswers[state.quizIdx];
+
+  const opts = q.opts.map((o, i) => {
+    let cls = '';
+    if (answered) { if (i===q.ans) cls='correct'; else if (i===userAns) cls='wrong'; }
+    return `<button class="quiz-opt ${cls}" ${answered?'disabled':''} onclick="answerExam(${i},${allQ.length})">
+      <span class="opt-letter">${String.fromCharCode(65+i)}</span>${esc(o)}
+    </button>`;
+  }).join('');
+
+  const nextBtn = answered ? `
+    <div class="quiz-next">
+      ${state.quizIdx < allQ.length-1
+        ? `<button class="btn-go" onclick="nextExam(${allQ.length})">Question suivante →</button>`
+        : `<button class="btn-go" onclick="finishExam()">Voir mes résultats ✓</button>`}
+    </div>` : '';
+
+  return `<div class="quiz-wrap" style="max-width:680px;margin:0 auto">
+    <div class="quiz-header">
+      <button class="btn-secondary" onclick="showHome()" style="padding:4px 10px;font-size:12px">✕</button>
+      <div class="quiz-progress"><div class="quiz-fill" style="width:${pct}%"></div></div>
+      <span class="quiz-counter">${state.quizIdx+1}/${allQ.length}</span>
+    </div>
+    <div class="module-tag-chip">${q.module}</div>
+    <div class="quiz-question">${esc(q.q)}</div>
+    <div class="quiz-opts">${opts}</div>
+    ${nextBtn}
+  </div>`;
+}
+
+// ===== ACTIONS =====
+function setTab(t) { state.tab=t; state.quizIdx=0; state.quizAnswers=[]; state.quizDone=false; renderContent(); }
+function goLesson(i) { state.lessonIdx=i; renderContent(); window.scrollTo(0,0); }
+function answerQuiz(i) { if(state.quizAnswers[state.quizIdx]===undefined){ state.quizAnswers[state.quizIdx]=i; renderContent(); }}
+function nextQ() { state.quizIdx++; renderContent(); }
+function finishQuiz() { state.quizDone=true; renderContent(); }
+function resetQuiz() { state.quizIdx=0; state.quizAnswers=[]; state.quizDone=false; renderContent(); }
+function flipCard() { state.fcFlipped=!state.fcFlipped; renderContent(); }
+function nextFC() { if(state.fcIdx<FLASHCARDS.length-1){state.fcIdx++;state.fcFlipped=false;}else{state.fcIdx=0;state.fcFlipped=false;} renderContent(); }
+function prevFC() { if(state.fcIdx>0){state.fcIdx--;state.fcFlipped=false;renderContent();} }
+function startExam() { state.examStarted=true; state.quizIdx=0; state.quizAnswers=[]; state.quizDone=false; renderContent(); }
+function answerExam(i,total) { if(state.quizAnswers[state.quizIdx]===undefined){state.quizAnswers[state.quizIdx]=i;renderContent();}}
+function nextExam(total) { state.quizIdx++; renderContent(); }
+function finishExam() { state.quizDone=true; renderContent(); }
+
+// ===== PROGRESS =====
+function updateProgress() {
+  const visited = Object.keys(state.progress).length;
+  const pct = Math.min(100, Math.round((visited / 6) * 100));
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-txt').textContent = pct + '%';
+}
+
+// ===== HELPERS =====
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function highlight(code) {
+  // Basic syntax highlighting
+  return code
+    // Comments
+    .replace(/(\/\/.*$|#.*$|\/\*[\s\S]*?\*\/|\{#[\s\S]*?#\})/gm, '<span class="cmt">$1</span>')
+    // PHP keywords
+    .replace(/\b(public|private|protected|static|function|class|namespace|use|new|return|if|else|elseif|foreach|for|while|extends|implements|interface|abstract|readonly|null|true|false|throw|try|catch|void|string|int|float|bool|array|never|self|parent)\b/g, '<span class="kw">$1</span>')
+    // PHP/Twig strings
+    .replace(/('[^']*'|"[^"]*")/g, '<span class="str">$1</span>')
+    // Attributes/annotations
+    .replace(/(#\[[\w\\:]+)/g, '<span class="attr">$1</span>')
+    // Twig {{}} {%%}
+    .replace(/({{|}}|{%|%})/g, '<span class="op">$1</span>')
+    // Variables
+    .replace(/(\$\w+)/g, '<span class="var-c">$1</span>')
+    // Numbers
+    .replace(/\b(\d+\.?\d*)\b/g, '<span class="num">$1</span>')
+    // PHP tags
+    .replace(/(&lt;\?php|&lt;\?=|\?&gt;)/g, '<span class="tag">$1</span>');
+}
+
+// ===== INIT =====
+renderContent();
+</script>
+</body>
+</html>

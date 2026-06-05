@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Symfony with LOUTCHEE — Plateforme d'apprentissage</title>
+<title>SymfonyLearn — Plateforme d'apprentissage</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Sora:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
 /* ===== RESET & BASE ===== */
@@ -510,7 +510,7 @@ pre.code-block {
   <div id="sidebar-logo">
     <div class="logo-icon">⚡</div>
     <div>
-      <div class="logo-text">Symfony with LOUTCHEE</div>
+      <div class="logo-text">SymfonyLearn</div>
       <div class="logo-badge">EHEIO 2026</div>
     </div>
   </div>
@@ -2962,24 +2962,111 @@ function esc(s) {
 }
 
 function highlight(code) {
-  // Basic syntax highlighting
-  return code
-    // Comments
-    .replace(/(\/\/.*$|#.*$|\/\*[\s\S]*?\*\/|\{#[\s\S]*?#\})/gm, '<span class="cmt">$1</span>')
-    // PHP keywords
-    .replace(/\b(public|private|protected|static|function|class|namespace|use|new|return|if|else|elseif|foreach|for|while|extends|implements|interface|abstract|readonly|null|true|false|throw|try|catch|void|string|int|float|bool|array|never|self|parent)\b/g, '<span class="kw">$1</span>')
-    // PHP/Twig strings
-    .replace(/('[^']*'|"[^"]*")/g, '<span class="str">$1</span>')
-    // Attributes/annotations
-    .replace(/(#\[[\w\\:]+)/g, '<span class="attr">$1</span>')
-    // Twig {{}} {%%}
-    .replace(/({{|}}|{%|%})/g, '<span class="op">$1</span>')
-    // Variables
-    .replace(/(\$\w+)/g, '<span class="var-c">$1</span>')
-    // Numbers
-    .replace(/\b(\d+\.?\d*)\b/g, '<span class="num">$1</span>')
-    // PHP tags
-    .replace(/(&lt;\?php|&lt;\?=|\?&gt;)/g, '<span class="tag">$1</span>');
+  // Tokenizer-based highlighter — processes one token at a time
+  // so no regex can corrupt a previously added <span> tag
+  const KW = /^(public|private|protected|static|function|class|namespace|use|new|return|if|else|elseif|foreach|for|while|extends|implements|interface|abstract|readonly|null|true|false|throw|try|catch|void|string|int|float|bool|array|never|self|parent)$/;
+  let result = '';
+  let i = 0;
+  const len = code.length;
+
+  while (i < len) {
+    // PHP opening tag
+    if (code.startsWith('&lt;?php', i)) {
+      result += '<span class="tag">&lt;?php</span>';
+      i += 8; continue;
+    }
+    if (code.startsWith('?&gt;', i)) {
+      result += '<span class="tag">?&gt;</span>';
+      i += 5; continue;
+    }
+    // Shell/YAML/PHP comment: # ... (to end of line)
+    if (code[i] === '#' && (i === 0 || code[i-1] === '\n' || code[i-1] === ' ' || code[i-1] === '\t' || code[i-1] === '│' || code[i-1] === '├' || code[i-1] === '└' || code[i-1] === '-')) {
+      let end = code.indexOf('\n', i);
+      if (end === -1) end = len;
+      result += '<span class="cmt">' + code.slice(i, end) + '</span>';
+      i = end; continue;
+    }
+    // Twig comment {# ... #}
+    if (code.startsWith('{#', i)) {
+      let end = code.indexOf('#}', i + 2);
+      if (end === -1) end = len - 2;
+      result += '<span class="cmt">' + code.slice(i, end + 2) + '</span>';
+      i = end + 2; continue;
+    }
+    // PHP // comment
+    if (code.startsWith('//', i)) {
+      let end = code.indexOf('\n', i);
+      if (end === -1) end = len;
+      result += '<span class="cmt">' + code.slice(i, end) + '</span>';
+      i = end; continue;
+    }
+    // PHP /* */ comment
+    if (code.startsWith('/*', i)) {
+      let end = code.indexOf('*/', i + 2);
+      if (end === -1) end = len - 2;
+      result += '<span class="cmt">' + code.slice(i, end + 2) + '</span>';
+      i = end + 2; continue;
+    }
+    // PHP/Twig attribute #[Route...]
+    if (code[i] === '#' && code[i+1] === '[') {
+      let end = i + 2;
+      while (end < len && code[end] !== ']' && code[end] !== '\n') end++;
+      if (code[end] === ']') end++;
+      result += '<span class="attr">' + code.slice(i, end) + '</span>';
+      i = end; continue;
+    }
+    // Twig {{ }} {% %}
+    if (code.startsWith('{{', i) || code.startsWith('}}', i) || code.startsWith('{%', i) || code.startsWith('%}', i)) {
+      result += '<span class="op">' + code.slice(i, i+2) + '</span>';
+      i += 2; continue;
+    }
+    // Single-quoted string
+    if (code[i] === "'" && (i === 0 || code[i-1] !== '\\')) {
+      let end = i + 1;
+      while (end < len && !(code[end] === "'" && code[end-1] !== '\\')) end++;
+      end = Math.min(end + 1, len);
+      result += '<span class="str">' + code.slice(i, end) + '</span>';
+      i = end; continue;
+    }
+    // Double-quoted string
+    if (code[i] === '"' && (i === 0 || code[i-1] !== '\\')) {
+      let end = i + 1;
+      while (end < len && !(code[end] === '"' && code[end-1] !== '\\')) end++;
+      end = Math.min(end + 1, len);
+      result += '<span class="str">' + code.slice(i, end) + '</span>';
+      i = end; continue;
+    }
+    // PHP variable $var
+    if (code[i] === '$') {
+      let end = i + 1;
+      while (end < len && /\w/.test(code[end])) end++;
+      result += '<span class="var-c">' + code.slice(i, end) + '</span>';
+      i = end; continue;
+    }
+    // Word (keyword or identifier or number)
+    if (/[a-zA-Z_]/.test(code[i])) {
+      let end = i + 1;
+      while (end < len && /[\w]/.test(code[end])) end++;
+      const word = code.slice(i, end);
+      if (KW.test(word)) {
+        result += '<span class="kw">' + word + '</span>';
+      } else {
+        result += word;
+      }
+      i = end; continue;
+    }
+    // Number
+    if (/[0-9]/.test(code[i])) {
+      let end = i + 1;
+      while (end < len && /[0-9.]/.test(code[end])) end++;
+      result += '<span class="num">' + code.slice(i, end) + '</span>';
+      i = end; continue;
+    }
+    // Everything else: output as-is
+    result += code[i];
+    i++;
+  }
+  return result;
 }
 
 // ===== INIT =====

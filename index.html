@@ -1860,7 +1860,10 @@ let state = {
   fcIdx: 0,
   fcFlipped: false,
   progress: {},
-  examStarted: false
+  examStarted: false,
+  examMode: 'qcm',
+  pdfAnswers: {},
+  pdfSubmitted: false
 };
 
 // ===== NAVIGATION =====
@@ -2183,33 +2186,510 @@ function buildFlashcards() {
 }
 
 // ===== EXAM =====
-function buildExam() {
-  const allQ = Object.values(MODULES).flatMap(m =>
-    m.quiz.map(q => ({...q, module: m.title}))
-  );
 
+// ===== EXAM PDF DATA (toutes les questions du vrai examen) =====
+const EXAM_PDF = [
+  // ===== SECTION 1: CONTROLLERS & ROUTING =====
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'checkbox',
+    q: 'Sélectionner les dossiers/fichiers qui ne font PAS partie de la structure initiale de Symfony',
+    opts: ['public/', 'templates/', 'infra/', 'var/cache/', 'bin/console', 'styles/'],
+    ans: [2, 5],
+    hint: 'infra/ et styles/ ne font pas partie de la structure Symfony initiale.'
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'open',
+    q: 'À quoi sert l\'attribut #[Route] ?',
+    ans: "L'attribut #[Route] permet de définir l'URL (chemin) qui va déclencher une méthode de contrôleur. Il associe une URL à une action PHP.",
+    hint: "L'attribut #[Route] mappe une URL vers une méthode de contrôleur."
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'dropdown',
+    q: 'L\'attribut #[Route] doit impérativement avoir un nom (name) configuré explicitement',
+    opts: ['Vrai', 'Faux'],
+    ans: 1,
+    hint: "Faux. Le name est optionnel, mais fortement recommandé. Symfony peut générer un nom automatique."
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'open',
+    q: 'La méthode render() de AbstractController retourne une réponse HTML. Écrire le nom des autres méthodes vues dans le cours qui peuvent retourner d\'autres types de réponses.',
+    ans: "json() → JsonResponse (API REST)\nredirectToRoute() → RedirectResponse (redirection interne)\nredirect() → RedirectResponse (URL externe)\ncreateNotFoundException() → Exception 404",
+    hint: "json(), redirectToRoute(), redirect(), createNotFoundException()"
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'open',
+    q: 'Comment peut-on déclencher une erreur 404 en PHP (dans un contrôleur Symfony) ?',
+    ans: "throw $this->createNotFoundException('Message') — Lance une exception qui génère une réponse HTTP 404.",
+    hint: "throw $this->createNotFoundException('...')"
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'open',
+    q: 'Comment vérifier si la requête HTTP courante est de type Ajax ?',
+    ans: "$request->isXmlHttpRequest() — Retourne true si la requête contient l'en-tête X-Requested-With: XMLHttpRequest.",
+    hint: "$request->isXmlHttpRequest()"
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'open',
+    q: 'Nous souhaitons récupérer les paramètres envoyés en POST via un formulaire. Comment peut-on faire ?',
+    ans: "$request->request->get('nom_champ') — L'objet $request->request correspond aux données POST (ParameterBag).",
+    hint: "$request->request->get('champ')"
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'open',
+    q: 'Comment peut-on vérifier si la requête envoyée est en DELETE ?',
+    ans: "$request->isMethod('DELETE') — Retourne true si la méthode HTTP de la requête est DELETE.",
+    hint: "$request->isMethod('DELETE')"
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'open',
+    q: 'Comment je peux rediriger l\'utilisateur vers une autre route ? (donner le nom de la méthode)',
+    ans: "redirectToRoute('nom_route') — Méthode de AbstractController qui génère une RedirectResponse vers une route nommée.",
+    hint: "redirectToRoute('nom_de_la_route')"
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'dropdown',
+    q: 'Nous souhaitons restreindre une route pour la modification uniquement (PUT/PATCH). Quelle est la bonne option ?',
+    opts: ["methods: ['PUT']", "methods: ['GET', 'POST']", "methods: ['PUT', 'PATCH']", "restrict: 'edit'"],
+    ans: 2,
+    hint: "methods: ['PUT', 'PATCH'] — Pour restreindre aux méthodes de modification."
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'open',
+    q: 'Écrire la commande qui permet de lister l\'ensemble des routes d\'un projet Symfony',
+    ans: "php bin/console debug:router",
+    hint: "php bin/console debug:router"
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'dropdown',
+    q: 'Avec la route #[Route("/users/{id}", requirements: [\'id\' => \'\\d+\'])], comment injecter le paramètre "id" dans le contrôleur ?',
+    opts: [
+      "public function show($id): Response",
+      "public function show(int $id): Response",
+      "public function show(Request $request): Response { $id = $request->get('id'); }",
+      "public function show(#[MapEntity] int $id): Response"
+    ],
+    ans: 1,
+    hint: "public function show(int $id) — Symfony injecte automatiquement le paramètre via le nom de l'argument."
+  },
+  {
+    section: 'Contrôleurs et Routing',
+    type: 'open',
+    q: 'Expliquer l\'utilité de l\'option "priority" dans le Routage en Symfony',
+    ans: "L'option priority détermine l'ordre d'évaluation des routes. Une priority plus haute = route évaluée en premier. Utile quand plusieurs routes ont des patterns qui se chevauchent (ex: /articles/special vs /articles/{slug}).",
+    hint: "Contrôle l'ordre d'évaluation — valeur plus haute = prioritaire."
+  },
+
+  // ===== SECTION 2: TWIG =====
+  {
+    section: 'Twig',
+    type: 'open',
+    q: 'Comment peut-on afficher une variable ou un texte en Twig ?',
+    ans: "{{ variable }} — Les doubles accolades permettent d'afficher n'importe quelle variable ou expression Twig.",
+    hint: "{{ variable }} ou {{ 'texte' }}"
+  },
+  {
+    section: 'Twig',
+    type: 'open',
+    q: 'Donner le nom de la fonction Twig permettant d\'intégrer les ressources (images, css et js)',
+    ans: "asset() — Exemple : {{ asset('css/app.css') }} génère le chemin correct vers les fichiers statiques.",
+    hint: "asset('chemin/vers/fichier.css')"
+  },
+  {
+    section: 'Twig',
+    type: 'dropdown',
+    q: 'Il est possible de récupérer l\'utilisateur connecté en Twig et pas seulement en PHP',
+    opts: ['Vrai', 'Faux'],
+    ans: 0,
+    hint: "Vrai. On peut utiliser app.user en Twig : {% if app.user %}{{ app.user.email }}{% endif %}"
+  },
+  {
+    section: 'Twig',
+    type: 'open',
+    q: 'Écrire la fonction Twig permettant de générer une URL absolue (http://www.example.com/page)',
+    ans: "absolute_url(path('nom_route')) — Exemple : {{ absolute_url(path('app_home')) }} génère https://monsite.com/",
+    hint: "absolute_url(path('nom_route'))"
+  },
+  {
+    section: 'Twig',
+    type: 'open',
+    q: 'Quel est l\'intérêt de l\'héritage de templates en Twig ?',
+    ans: "Éviter la duplication du code HTML commun (header, nav, footer). Une template parente (base.html.twig) définit la structure commune avec des blocs. Les templates enfants héritent avec {% extends %} et remplissent uniquement les blocs nécessaires.",
+    hint: "Réutiliser la structure commune (base.html.twig), éviter la duplication."
+  },
+  {
+    section: 'Twig',
+    type: 'open',
+    q: 'Comment peut-on redéfinir des parties d\'une template ?',
+    ans: "Avec les blocs {% block nom %}...{% endblock %}. Dans la template enfant, on redéfinit un bloc avec {% block nom %}nouveau contenu{% endblock %}. On peut inclure le contenu parent avec {{ parent() }}.",
+    hint: "{% block nom %}contenu{% endblock %} dans la template enfant."
+  },
+  {
+    section: 'Twig',
+    type: 'open',
+    q: 'Nous souhaitons réutiliser une template partielle en Twig. Donner le nom de la fonction permettant d\'inclure la template.',
+    ans: "include() — Exemple : {{ include('partials/_navbar.html.twig') }}",
+    hint: "{{ include('chemin/template.html.twig') }}"
+  },
+
+  // ===== SECTION 3: INJECTION DE DEPENDANCES =====
+  {
+    section: 'Injection de dépendances en Symfony',
+    type: 'open',
+    q: 'Quel est le rôle du Service Container ?',
+    ans: "Le Service Container est le cœur de Symfony. Il instancie, configure et injecte automatiquement tous les services (objets/classes) de l'application. Il évite d'instancier manuellement les objets avec new et gère les dépendances entre services.",
+    hint: "Gère et injecte automatiquement tous les services de l'application."
+  },
+  {
+    section: 'Injection de dépendances en Symfony',
+    type: 'open',
+    q: 'Donner le nom (chemin et le nom) du fichier de configuration du Service Container',
+    ans: "config/services.yaml",
+    hint: "config/services.yaml"
+  },
+  {
+    section: 'Injection de dépendances en Symfony',
+    type: 'open',
+    q: 'C\'est quoi l\'Autowiring ?',
+    ans: "L'Autowiring est un mécanisme qui permet à Symfony d'injecter automatiquement les dépendances dans les constructeurs des services, en analysant les types (type hints) PHP des arguments. Plus besoin de configurer manuellement les injections dans services.yaml.",
+    hint: "Injection automatique via les type hints PHP du constructeur."
+  },
+  {
+    section: 'Injection de dépendances en Symfony',
+    type: 'open',
+    q: 'Quel est l\'intérêt de la configuration App\\ + resource: \'../src/\' (lignes 9 et 10 du services.yaml) ?',
+    ans: "Cette configuration enregistre automatiquement TOUS les fichiers du dossier src/ comme services dans le container. Symfony scanne le dossier src/ et crée un service pour chaque classe PHP trouvée, sans avoir à les déclarer un par un.",
+    hint: "Enregistre automatiquement tous les fichiers src/ comme services."
+  },
+  {
+    section: 'Injection de dépendances en Symfony',
+    type: 'dropdown',
+    q: 'Comment injecter manuellement des arguments dans le constructeur d\'un service via YAML ?',
+    opts: [
+      "Avec la clé 'inject:' sous le service",
+      "Avec la clé 'arguments:' sous le service dans services.yaml",
+      "Avec la clé 'params:' dans parameters.yaml",
+      "Ce n'est pas possible en YAML"
+    ],
+    ans: 1,
+    hint: "arguments: $maVariable: '@App\\Service\\MonService' dans services.yaml"
+  },
+  {
+    section: 'Injection de dépendances en Symfony',
+    type: 'open',
+    q: 'Donner la commande permettant de voir la liste des services enregistrés dans le Service Container',
+    ans: "php bin/console debug:container\nPour chercher un service précis : php bin/console debug:container NomService",
+    hint: "php bin/console debug:container"
+  },
+  {
+    section: 'Injection de dépendances en Symfony',
+    type: 'open',
+    q: 'À quoi servent les paramètres de conteneur en Symfony ?',
+    ans: "Les paramètres de conteneur (définis sous 'parameters:' dans services.yaml) permettent de stocker des valeurs de configuration réutilisables dans toute l'application (ex: %app.admin_email%). On y accède avec %nom_parametre% dans YAML ou $this->getParameter() en PHP.",
+    hint: "Stocker des valeurs de configuration réutilisables (ex: %app.email%)."
+  },
+  {
+    section: 'Injection de dépendances en Symfony',
+    type: 'open',
+    q: 'Quel est l\'intérêt d\'utiliser les interfaces comme types d\'arguments en Symfony ?',
+    ans: "Cela permet le découplage : le code dépend d'un contrat (interface) et non d'une implémentation concrète. On peut facilement changer l'implémentation sans modifier le code. Facilite aussi les tests unitaires (injection de mocks).",
+    hint: "Découplage, flexibilité et testabilité (changer l'implémentation facilement)."
+  },
+  {
+    section: 'Injection de dépendances en Symfony',
+    type: 'open',
+    q: 'Comment Symfony peut-il injecter le bon service lorsqu\'on utilise une interface comme type d\'argument ?',
+    ans: "En configurant un alias dans services.yaml :\nApp\\MonInterface: '@App\\Service\\MonImplementation'\nOu via un binding dans _defaults:\nbind:\n  App\\MonInterface $service: '@App\\Service\\MonImplementation'",
+    hint: "Configurer un alias dans services.yaml : App\\Interface: '@App\\Service\\Implementation'"
+  },
+  {
+    section: 'Injection de dépendances en Symfony',
+    type: 'open',
+    q: 'Expliquer l\'erreur : "Cannot autowire argument $stringTransformer... it references interface StringTransformerInterface but no such service exists."',
+    ans: "Cette erreur signifie que Symfony ne sait pas quelle implémentation de StringTransformerInterface injecter. Il y a plusieurs classes qui implémentent cette interface (LowerTransformer, UpperTransformer) et Symfony ne peut pas choisir automatiquement. Solution : créer un alias dans services.yaml pour lier l'interface à une implémentation spécifique.",
+    hint: "Symfony ne sait pas quelle implémentation de l'interface choisir → créer un alias dans services.yaml."
+  },
+
+  // ===== SECTION 4: FORMULAIRES =====
+  {
+    section: 'Les Formulaires',
+    type: 'dropdown',
+    q: 'Depuis quelle classe devons-nous étendre nos formulaires avant de les utiliser ?',
+    opts: ['AbstractForm', 'BaseFormType', 'AbstractType', 'FormBuilder'],
+    ans: 2,
+    hint: "AbstractType — dans Symfony\\Component\\Form\\AbstractType"
+  },
+  {
+    section: 'Les Formulaires',
+    type: 'open',
+    q: 'Écrire le nom de la méthode qu\'on utilise pour créer un formulaire dans le contrôleur',
+    ans: "createForm(NomFormType::class, $entity) — Méthode de AbstractController qui instancie le formulaire et le lie à l'entité.",
+    hint: "createForm(UserType::class, $user)"
+  },
+  {
+    section: 'Les Formulaires',
+    type: 'checkbox',
+    q: 'Parmi les fonctions Twig suivantes, sélectionner la ou les fonctions qui servent à afficher le formulaire',
+    opts: ['form_row', 'form_end', 'form_widget', 'form_field_label', 'form_label', 'form_attributes'],
+    ans: [0, 1, 2, 4],
+    hint: "form_row (label+input+erreurs), form_end (</form>+CSRF), form_widget (input seul), form_label (label seul). form_field_label et form_attributes n'existent pas."
+  },
+  {
+    section: 'Les Formulaires',
+    type: 'open',
+    q: 'Donner 2 façons pour valider un formulaire en Symfony',
+    ans: "1. $form->isSubmitted() && $form->isValid() — vérification dans le contrôleur\n2. Les contraintes de validation (#[Assert\\NotBlank], #[Assert\\Email]...) sur les propriétés de l'entité",
+    hint: "isSubmitted() && isValid() + contraintes #[Assert\\...] sur l'entité."
+  },
+  {
+    section: 'Les Formulaires',
+    type: 'open',
+    q: 'Pour enregistrer les données en base de données, nous devons s\'assurer que le formulaire est soumis. Donner le nom de la méthode à appeler',
+    ans: "isSubmitted() — $form->isSubmitted() vérifie si le formulaire a bien été envoyé (méthode POST). À combiner avec isValid().",
+    hint: "$form->isSubmitted()"
+  },
+  {
+    section: 'Les Formulaires',
+    type: 'open',
+    q: 'Écrire 2 contraintes de validation vues dans le cours et permettant de valider un champ',
+    ans: "#[Assert\\NotBlank] — vérifie que le champ n'est pas vide\n#[Assert\\Email] — vérifie que le format email est valide\n(autres valides : #[Assert\\Length], #[Assert\\Regex], #[Assert\\PositiveOrZero], #[Assert\\Url]...)",
+    hint: "#[Assert\\NotBlank], #[Assert\\Email], #[Assert\\Length], #[Assert\\Regex]..."
+  },
+
+  // ===== SECTION 5: DOCTRINE =====
+  {
+    section: 'Les bases de données - Doctrine',
+    type: 'open',
+    q: 'Écrire la commande permettant de créer une base de données',
+    ans: "php bin/console doctrine:database:create",
+    hint: "php bin/console doctrine:database:create"
+  },
+  {
+    section: 'Les bases de données - Doctrine',
+    type: 'open',
+    q: 'Comment créer une entité Doctrine en Symfony ?',
+    ans: "php bin/console make:entity NomEntité — Cette commande génère la classe entité avec les attributs ORM, les getters et setters automatiquement.",
+    hint: "php bin/console make:entity NomEntite"
+  },
+  {
+    section: 'Les bases de données - Doctrine',
+    type: 'checkbox',
+    q: 'Sélectionner les bonnes commandes à exécuter pour mettre à jour la structure de la base de données',
+    opts: [
+      'php bin/console doctrine:migrations:migrate',
+      'php bin/console doctrine:database:update',
+      'php bin/console make:migration'
+    ],
+    ans: [0, 2],
+    hint: "make:migration (génère le fichier SQL) + doctrine:migrations:migrate (l'applique). doctrine:database:update est déconseillé en production."
+  },
+  {
+    section: 'Les bases de données - Doctrine',
+    type: 'dropdown',
+    q: 'Pour écrire en base de données nous devons passer par l\'EntityManager',
+    opts: ['Vrai', 'Faux'],
+    ans: 0,
+    hint: "Vrai. L'EntityManager (persist, flush, remove) est le seul moyen d'écrire en BDD avec Doctrine."
+  },
+  {
+    section: 'Les bases de données - Doctrine',
+    type: 'dropdown',
+    q: 'Pour l\'ajout d\'un enregistrement en base de données il suffit d\'appeler flush()',
+    opts: ['Vrai', 'Faux'],
+    ans: 1,
+    hint: "Faux. Il faut d'abord appeler persist($entity) pour marquer l'objet, PUIS flush() pour exécuter le SQL."
+  },
+  {
+    section: 'Les bases de données - Doctrine',
+    type: 'open',
+    q: 'Nous souhaitons supprimer un enregistrement en base de données. Donner les appels nécessaires',
+    ans: "$em->remove($entity);\n$em->flush();\nD'abord remove() pour marquer l'entité pour suppression, puis flush() pour exécuter le DELETE SQL.",
+    hint: "$em->remove($entity); puis $em->flush();"
+  },
+  {
+    section: 'Les bases de données - Doctrine',
+    type: 'dropdown',
+    q: 'La classe Repository est dédiée pour la lecture depuis la base de données (Repository Design Pattern)',
+    opts: ['Vrai', 'Faux'],
+    ans: 0,
+    hint: "Vrai. Le Repository contient les méthodes de lecture (find, findAll, findBy...). L'écriture passe par l'EntityManager."
+  },
+  {
+    section: 'Les bases de données - Doctrine',
+    type: 'open',
+    q: 'Considérons le code avec #[MapEntity(mapping: [\'standardNumber\' => \'isbn\'])]. Décrivez le comportement de Symfony si on demande un livre qui n\'existe pas en base de données',
+    ans: "Symfony lance automatiquement une exception HTTP 404 (Not Found). Avec #[MapEntity], si l'entité n'est pas trouvée en BDD selon le mapping, Symfony génère une réponse 404 sans qu'on ait besoin d'écrire de code de vérification.",
+    hint: "Symfony lance automatiquement une 404 si l'entité n'est pas trouvée."
+  },
+  {
+    section: 'Les bases de données - Doctrine',
+    type: 'open',
+    q: 'Quelle est la différence entre OneToOne et OneToMany ?',
+    ans: "OneToOne : relation 1 pour 1 (ex: Un User ↔ Un Profil). Chaque entité ne peut être liée qu'à UNE seule autre entité.\nOneToMany : relation 1 pour N (ex: Un Auteur → Plusieurs Livres). Une entité peut être liée à PLUSIEURS entités de l'autre côté.",
+    hint: "OneToOne = 1↔1, OneToMany = 1↔N (côté Many = ManyToOne dans l'autre entité)"
+  },
+  {
+    section: 'Les bases de données - Doctrine',
+    type: 'open',
+    q: 'Quel est l\'intérêt de EntityType dans les formulaires en Symfony ?',
+    ans: "EntityType permet d'afficher une liste déroulante (select) remplie avec les données d'une entité Doctrine. Il charge automatiquement les enregistrements depuis la BDD et gère la relation entre les formulaires et les entités liées.",
+    hint: "Affiche une liste déroulante remplie avec les données d'une entité depuis la BDD."
+  },
+  {
+    section: 'Les bases de données - Doctrine',
+    type: 'dropdown',
+    q: 'Avec Doctrine, il n\'est pas possible d\'exécuter des requêtes SQL natives',
+    opts: ['Vrai', 'Faux'],
+    ans: 1,
+    hint: "Faux. Doctrine permet d'exécuter du SQL natif via $em->getConnection()->executeQuery('SELECT ...')."
+  },
+
+  // ===== SECTION 6: SECURITE =====
+  {
+    section: 'La sécurité',
+    type: 'open',
+    q: 'Quels sont les grands axes de la sécurité en Symfony ?',
+    ans: "1. Authentification : vérifier l'identité de l'utilisateur (Qui es-tu ?)\n2. Autorisation : vérifier si l'utilisateur a le droit d'accéder à une ressource (As-tu le droit ?)",
+    hint: "Authentification (qui es-tu ?) + Autorisation (as-tu le droit ?)"
+  },
+  {
+    section: 'La sécurité',
+    type: 'open',
+    q: 'Donner la commande permettant de créer un utilisateur Symfony',
+    ans: "php bin/console make:user — Génère l'entité User avec UserInterface, les propriétés email/password/roles et le UserProvider configuré automatiquement.",
+    hint: "php bin/console make:user"
+  },
+  {
+    section: 'La sécurité',
+    type: 'open',
+    q: 'Expliquez l\'intérêt d\'implémenter UserInterface',
+    ans: "UserInterface est un contrat que Symfony Security exige. Il force l'entité User à implémenter getUserIdentifier() (identifiant unique), getRoles() (liste des rôles) et eraseCredentials() (effacer données sensibles). Sans UserInterface, le système de sécurité ne peut pas fonctionner.",
+    hint: "Contrat obligatoire pour Symfony Security (getUserIdentifier, getRoles, eraseCredentials)."
+  },
+  {
+    section: 'La sécurité',
+    type: 'dropdown',
+    q: 'Un UserProvider permet de :',
+    opts: [
+      'Chiffrer les mots de passe des utilisateurs',
+      'Charger l\'utilisateur depuis la source de données (BDD) pendant l\'authentification',
+      'Gérer les rôles et permissions',
+      'Configurer les firewalls'
+    ],
+    ans: 1,
+    hint: "Le UserProvider charge l'utilisateur depuis la BDD grâce à son identifiant (email, username...)."
+  },
+  {
+    section: 'La sécurité',
+    type: 'open',
+    q: 'Quel est le rôle des firewalls (pares-feux) en Symfony ?',
+    ans: "Les firewalls définissent des zones de sécurité dans l'application. Chaque firewall gère comment les requêtes sont authentifiées dans sa zone (formulaire de login, token API...). Ex: firewall 'main' pour le site web, 'api' pour les endpoints API.",
+    hint: "Définissent des zones de sécurité avec leur propre logique d'authentification."
+  },
+  {
+    section: 'La sécurité',
+    type: 'open',
+    q: 'Avec la configuration security.yaml (2 firewalls: main et api avec pattern: ^/api), comment Symfony va réagir ?',
+    ans: "Symfony appliquera le firewall 'api' à toutes les requêtes commençant par /api. Le firewall 'main' s'appliquera aux autres URLs. Chaque firewall peut avoir sa propre logique d'authentification (formulaire pour main, token JWT pour api).",
+    hint: "Le firewall 'api' intercepte les requêtes /api*, le firewall 'main' intercepte le reste."
+  },
+  {
+    section: 'La sécurité',
+    type: 'open',
+    q: 'C\'est quoi un Authenticator ?',
+    ans: "Un Authenticator est une classe qui gère le processus complet d'authentification. Il implémente les méthodes supports() (cette requête doit-elle être authentifiée ?), authenticate() (créer le Passport avec les credentials), onAuthenticationSuccess() et onAuthenticationFailure().",
+    hint: "Classe qui gère le processus d'authentification (supports, authenticate, onSuccess, onFailure)."
+  },
+  {
+    section: 'La sécurité',
+    type: 'checkbox',
+    q: 'Sélectionner les méthodes à implémenter pour un Authenticator',
+    opts: ['supports()', 'connect()', 'logout()', 'authenticate()', 'onAuthenticationSuccess()', 'redirectOnFailure()', 'onAuthenticationFailure()'],
+    ans: [0, 3, 4, 6],
+    hint: "supports(), authenticate(), onAuthenticationSuccess(), onAuthenticationFailure() — Les 4 méthodes obligatoires."
+  },
+  {
+    section: 'La sécurité',
+    type: 'open',
+    q: 'Quel est le but d\'un Passport dans le système de sécurité Symfony ?',
+    ans: "Le Passport encapsule toutes les informations nécessaires pour authentifier un utilisateur : UserBadge (charge l'user par son identifiant) + PasswordCredentials (vérifie le mot de passe) + badges optionnels (CsrfTokenBadge pour la protection CSRF).",
+    hint: "Encapsule les credentials : new Passport(new UserBadge($email), new PasswordCredentials($password))"
+  },
+  {
+    section: 'La sécurité',
+    type: 'open',
+    q: 'Donner 3 façons pour récupérer un utilisateur en Symfony',
+    ans: "1. $this->getUser() — dans un contrôleur (hérite de AbstractController)\n2. $security->getUser() — en injectant Security $security\n3. {{ app.user }} — dans un template Twig",
+    hint: "getUser() en contrôleur, Security::getUser() en service, app.user en Twig."
+  },
+  {
+    section: 'La sécurité',
+    type: 'open',
+    q: 'Comment vérifier si un utilisateur a un certain Role ? Donner toutes les façons possibles',
+    ans: "1. $this->denyAccessUnlessGranted('ROLE_ADMIN') → lève exception 403\n2. $this->isGranted('ROLE_ADMIN') → retourne true/false\n3. #[IsGranted('ROLE_ADMIN')] → attribut PHP sur la méthode\n4. {% if is_granted('ROLE_ADMIN') %} → dans Twig\n5. access_control dans security.yaml",
+    hint: "denyAccessUnlessGranted(), isGranted(), #[IsGranted], is_granted() Twig, access_control YAML."
+  },
+  {
+    section: 'La sécurité',
+    type: 'open',
+    q: 'Comment restreindre l\'accès par rôle en YAML ?',
+    ans: "Dans security.yaml, sous access_control :\naccess_control:\n    - { path: ^/admin, roles: ROLE_ADMIN }\n    - { path: ^/profile, roles: ROLE_USER }",
+    hint: "access_control: - { path: ^/admin, roles: ROLE_ADMIN }"
+  }
+];
+
+// ===== BUILD EXAM PDF =====
+function buildExam() {
   if (!state.examStarted) {
     return `
 <div class="exam-hero">
   <h1 class="exam-title">📋 Examen Blanc Symfony</h1>
-  <p class="exam-sub">Inspiré de l'examen EHEIO 2026 — Toutes les thématiques couvertes</p>
+  <p class="exam-sub">Inspiré de l'examen EHEIO 2026 — Format identique au vrai examen</p>
   <div class="exam-meta">
-    <div class="exam-meta-item"><div class="exam-meta-num">${allQ.length}</div><div class="exam-meta-lbl">Questions</div></div>
-    <div class="exam-meta-item"><div class="exam-meta-num">6</div><div class="exam-meta-lbl">Modules</div></div>
-    <div class="exam-meta-item"><div class="exam-meta-num">QCM</div><div class="exam-meta-lbl">Format</div></div>
+    <div class="exam-meta-item"><div class="exam-meta-num">2</div><div class="exam-meta-lbl">Modes</div></div>
+    <div class="exam-meta-item"><div class="exam-meta-num">6</div><div class="exam-meta-lbl">Sections</div></div>
+    <div class="exam-meta-item"><div class="exam-meta-num">${EXAM_PDF.length}</div><div class="exam-meta-lbl">Questions PDF</div></div>
   </div>
-  <p style="font-size:13px;color:var(--text3);margin-bottom:1.5rem;max-width:420px;margin-left:auto;margin-right:auto">
-    Les questions couvrent : Routing, Twig, Injection de dépendances, Formulaires, Doctrine et Sécurité.
-  </p>
-  <button class="btn-primary" style="font-size:15px;padding:12px 32px" onclick="startExam()">Commencer l'examen →</button>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:520px;margin:0 auto 1.5rem">
+    <div onclick="startExamMode('qcm')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;cursor:pointer;transition:all .18s;text-align:center" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:28px;margin-bottom:8px">🎯</div>
+      <div style="font-family:var(--display);font-size:14px;font-weight:600;margin-bottom:4px">Mode QCM</div>
+      <div style="font-size:12px;color:var(--text3)">Questions à choix multiples<br>Correction automatique</div>
+    </div>
+    <div onclick="startExamMode('pdf')" style="background:var(--surface);border:2px solid var(--purple);border-radius:var(--radius-lg);padding:1.25rem;cursor:pointer;transition:all .18s;text-align:center;position:relative" onmouseover="this.style.borderColor='var(--purple-light)'" onmouseout="this.style.borderColor='var(--purple)'">
+      <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--purple);color:white;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap">⭐ COMME LE VRAI EXAMEN</div>
+      <div style="font-size:28px;margin-bottom:8px">📝</div>
+      <div style="font-family:var(--display);font-size:14px;font-weight:600;margin-bottom:4px">Mode PDF</div>
+      <div style="font-size:12px;color:var(--text3)">Questions ouvertes, dropdowns<br>cases à cocher — comme le PDF</div>
+    </div>
+  </div>
 </div>`;
   }
 
+  if (state.examMode === 'qcm') return buildExamQCM();
+  return buildExamPDF();
+}
+
+// ===== MODE QCM (ancien) =====
+function buildExamQCM() {
+  const allQ = Object.values(MODULES).flatMap(m => m.quiz.map(q => ({...q, module: m.title})));
+
   if (state.quizDone) {
-    const score = state.quizAnswers.filter((a, i) => a === allQ[i].ans).length;
+    const score = state.quizAnswers.filter((a,i) => a === allQ[i].ans).length;
     const pct = Math.round(score / allQ.length * 100);
     const clr = pct >= 80 ? '#2dd4a8' : pct >= 50 ? '#f5c842' : '#f06060';
-    const reviews = allQ.map((q, i) => {
+    const reviews = allQ.map((q,i) => {
       const ok = state.quizAnswers[i] === q.ans;
       return `<div class="review-item">
         <div style="font-size:11px;color:var(--text3);margin-bottom:4px">${q.module}</div>
@@ -2223,14 +2703,10 @@ function buildExam() {
     return `<div class="result-wrap" style="max-width:680px;margin:0 auto">
       <div class="result-score" style="color:${clr}">${pct}%</div>
       <div class="result-label">${score}/${allQ.length} bonnes réponses</div>
-      <div class="result-msg">${pct>=80?'🎉 Excellent ! Vous êtes prêt pour l\'examen !':pct>=50?'📚 Bon travail ! Continuez à réviser les modules faibles.':'💪 Relisez les modules et réessayez !'}</div>
-      <div class="result-grid">
-        <div class="result-stat"><div class="result-stat-num" style="color:#2dd4a8">${score}</div><div class="result-stat-lbl">Correctes</div></div>
-        <div class="result-stat"><div class="result-stat-num" style="color:#f06060">${allQ.length-score}</div><div class="result-stat-lbl">Incorrectes</div></div>
-      </div>
+      <div class="result-msg">${pct>=80?'🎉 Excellent !':pct>=50?'📚 Continuez à réviser !':'💪 Relisez les modules !'}</div>
       <div style="display:flex;gap:8px;margin-bottom:1.5rem">
-        <button class="btn-go" style="flex:1" onclick="startExam()">Recommencer</button>
-        <button class="btn-secondary" style="flex:1" onclick="showHome()">Retour à l'accueil</button>
+        <button class="btn-go" style="flex:1" onclick="startExamMode('qcm')">Recommencer QCM</button>
+        <button class="btn-secondary" style="flex:1" onclick="state.examStarted=false;renderContent()">Choisir le mode</button>
       </div>
       <div class="review-list">${reviews}</div>
     </div>`;
@@ -2241,7 +2717,7 @@ function buildExam() {
   const answered = state.quizAnswers[state.quizIdx] !== undefined;
   const userAns = state.quizAnswers[state.quizIdx];
 
-  const opts = q.opts.map((o, i) => {
+  const opts = q.opts.map((o,i) => {
     let cls = '';
     if (answered) { if (i===q.ans) cls='correct'; else if (i===userAns) cls='wrong'; }
     return `<button class="quiz-opt ${cls}" ${answered?'disabled':''} onclick="answerExam(${i},${allQ.length})">
@@ -2249,24 +2725,185 @@ function buildExam() {
     </button>`;
   }).join('');
 
-  const nextBtn = answered ? `
-    <div class="quiz-next">
-      ${state.quizIdx < allQ.length-1
-        ? `<button class="btn-go" onclick="nextExam(${allQ.length})">Question suivante →</button>`
-        : `<button class="btn-go" onclick="finishExam()">Voir mes résultats ✓</button>`}
-    </div>` : '';
-
   return `<div class="quiz-wrap" style="max-width:680px;margin:0 auto">
     <div class="quiz-header">
-      <button class="btn-secondary" onclick="showHome()" style="padding:4px 10px;font-size:12px">✕</button>
+      <button class="btn-secondary" onclick="state.examStarted=false;renderContent()" style="padding:4px 10px;font-size:12px">✕</button>
       <div class="quiz-progress"><div class="quiz-fill" style="width:${pct}%"></div></div>
       <span class="quiz-counter">${state.quizIdx+1}/${allQ.length}</span>
     </div>
-    <div class="module-tag-chip">${q.module}</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:4px">🎯 Mode QCM · ${q.module}</div>
     <div class="quiz-question">${esc(q.q)}</div>
     <div class="quiz-opts">${opts}</div>
-    ${nextBtn}
+    ${answered ? `<div class="quiz-next">
+      ${state.quizIdx < allQ.length-1
+        ? `<button class="btn-go" onclick="nextExam(${allQ.length})">Suivant →</button>`
+        : `<button class="btn-go" onclick="finishExam()">Voir résultats ✓</button>`}
+    </div>` : ''}
   </div>`;
+}
+
+// ===== MODE PDF =====
+function buildExamPDF() {
+  if (state.pdfSubmitted) return buildExamPDFResults();
+
+  const sections = [...new Set(EXAM_PDF.map(q => q.section))];
+  let html = `
+<div style="max-width:720px;margin:0 auto">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem">
+    <button class="btn-secondary" onclick="state.examStarted=false;renderContent()" style="padding:6px 12px;font-size:12px">← Retour</button>
+    <div style="flex:1">
+      <div style="font-family:var(--display);font-weight:700;font-size:16px">Examen Blanc Symfony 2026 — EHEIO</div>
+      <div style="font-size:12px;color:var(--text3)">Ceci est un examen blanc qui vous aide à mieux vous préparer à l'examen</div>
+    </div>
+  </div>`;
+
+  sections.forEach(section => {
+    const sectionQs = EXAM_PDF.filter(q => q.section === section);
+    const sectionIdx = EXAM_PDF.indexOf(sectionQs[0]);
+    html += `
+  <div style="margin-bottom:2rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border);margin-bottom:1rem">
+      <div style="font-size:13px;font-weight:500;color:var(--text3)">${section}</div>
+      <div style="font-size:12px;color:var(--text3)">0 point(s) sur 0</div>
+    </div>`;
+
+    sectionQs.forEach(q => {
+      const qIdx = EXAM_PDF.indexOf(q);
+      html += buildPDFQuestion(q, qIdx);
+    });
+
+    html += `</div>`;
+  });
+
+  html += `
+  <div style="text-align:center;padding:2rem 0">
+    <button onclick="submitPDFExam()" class="btn-go" style="font-size:15px;padding:14px 40px">
+      ✅ Soumettre l'examen et voir les corrections
+    </button>
+  </div>
+</div>`;
+  return html;
+}
+
+function buildPDFQuestion(q, idx) {
+  const stateKey = 'pdf_' + idx;
+
+  if (q.type === 'open') {
+    return `
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:10px">
+  <div style="font-size:14px;font-weight:500;line-height:1.5;margin-bottom:1rem">${q.q}</div>
+  <textarea id="pdf_ans_${idx}" rows="3" placeholder="Votre réponse..." oninput="savePDFAnswer(${idx}, this.value)"
+    style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px;color:var(--text);font-family:var(--sans);font-size:13px;resize:vertical;line-height:1.6">${state.pdfAnswers[idx] || ''}</textarea>
+</div>`;
+  }
+
+  if (q.type === 'dropdown') {
+    const cur = state.pdfAnswers[idx];
+    return `
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:10px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.75rem">
+    <div style="font-size:14px;font-weight:500;line-height:1.5;flex:1">${q.q}</div>
+    <span style="font-size:11px;background:var(--bg4);color:var(--text3);padding:3px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0">⊙ Dropdown</span>
+  </div>
+  <select onchange="savePDFAnswer(${idx}, parseInt(this.value))"
+    style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-family:var(--sans);font-size:13px;width:200px">
+    <option value="-1" ${cur===undefined?'selected':''}>Sélectionner</option>
+    ${q.opts.map((o,i) => `<option value="${i}" ${cur===i?'selected':''}>${o}</option>`).join('')}
+  </select>
+</div>`;
+  }
+
+  if (q.type === 'checkbox') {
+    const cur = state.pdfAnswers[idx] || [];
+    return `
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:10px">
+  <div style="font-size:14px;font-weight:500;line-height:1.5;margin-bottom:1rem">${q.q}</div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    ${q.opts.map((o,i) => `
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);font-size:13px">
+      <input type="checkbox" ${cur.includes(i)?'checked':''} onchange="togglePDFCheckbox(${idx}, ${i}, this.checked)"
+        style="width:16px;height:16px;accent-color:var(--purple);cursor:pointer">
+      <span>${o}</span>
+    </label>`).join('')}
+  </div>
+</div>`;
+  }
+  return '';
+}
+
+function buildExamPDFResults() {
+  let totalQ = EXAM_PDF.length;
+  let scored = 0;
+  let html = `<div style="max-width:720px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-family:var(--display);font-size:1.2rem;font-weight:700;margin-bottom:4px">📋 Correction — Examen Blanc EHEIO 2026</div>
+      <div style="font-size:13px;color:var(--text3)">Voici vos réponses avec les corrections</div>
+    </div>`;
+
+  const sections = [...new Set(EXAM_PDF.map(q => q.section))];
+  sections.forEach(section => {
+    const sectionQs = EXAM_PDF.filter(q => q.section === section);
+    html += `<div style="margin-bottom:2rem">
+      <div style="font-size:13px;font-weight:600;color:var(--purple-light);padding:0.5rem 0;border-bottom:1px solid var(--border);margin-bottom:1rem">${section}</div>`;
+
+    sectionQs.forEach(q => {
+      const qIdx = EXAM_PDF.indexOf(q);
+      const userAns = state.pdfAnswers[qIdx];
+      let isOk = false;
+      let userDisplay = '';
+      let correctDisplay = '';
+
+      if (q.type === 'open') {
+        isOk = userAns && userAns.trim().length > 3;
+        userDisplay = userAns || '(pas de réponse)';
+        correctDisplay = q.ans;
+      } else if (q.type === 'dropdown') {
+        isOk = userAns === q.ans;
+        userDisplay = userAns !== undefined && userAns >= 0 ? q.opts[userAns] : '(pas de réponse)';
+        correctDisplay = q.opts[q.ans];
+      } else if (q.type === 'checkbox') {
+        const userArr = userAns || [];
+        isOk = JSON.stringify([...userArr].sort()) === JSON.stringify([...q.ans].sort());
+        userDisplay = userArr.length ? userArr.map(i => q.opts[i]).join(', ') : '(pas de réponse)';
+        correctDisplay = q.ans.map(i => q.opts[i]).join(', ');
+      }
+
+      if (isOk) scored++;
+
+      html += `
+      <div style="background:var(--surface);border:1px solid ${isOk?'#2dd4a830':'#f0606030'};border-left:3px solid ${isOk?'#2dd4a8':'#f06060'};border-radius:var(--radius);padding:1rem;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:500;margin-bottom:8px;line-height:1.4">${isOk?'✅':'❌'} ${q.q}</div>
+        ${q.type === 'open' ? `
+          <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Votre réponse :</div>
+          <div style="font-size:12.5px;background:var(--bg3);border-radius:6px;padding:8px 10px;margin-bottom:8px;white-space:pre-wrap;line-height:1.6">${userDisplay || '<em style="color:var(--text3)">Pas de réponse</em>'}</div>
+          <div style="font-size:12px;color:#2dd4a8;margin-bottom:4px">✅ Bonne réponse :</div>
+          <div style="font-size:12.5px;background:rgba(45,212,168,0.08);border:1px solid rgba(45,212,168,0.2);border-radius:6px;padding:8px 10px;white-space:pre-wrap;line-height:1.6;color:var(--text)">${correctDisplay}</div>
+        ` : `
+          <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px">
+            <div><span style="color:var(--text3)">Votre réponse : </span><span style="color:${isOk?'#2dd4a8':'#f06060'}">${userDisplay}</span></div>
+            ${!isOk?`<div><span style="color:var(--text3)">Bonne réponse : </span><span style="color:#2dd4a8">${correctDisplay}</span></div>`:''}
+          </div>
+        `}
+        <div style="font-size:11.5px;color:var(--text3);margin-top:8px;font-style:italic">💡 ${q.hint}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  const pct = Math.round(scored / totalQ * 100);
+  const clr = pct >= 75 ? '#2dd4a8' : pct >= 50 ? '#f5c842' : '#f06060';
+
+  html = `<div style="text-align:center;padding:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);margin-bottom:1.5rem">
+    <div style="font-family:var(--display);font-size:2.5rem;font-weight:700;color:${clr}">${pct}%</div>
+    <div style="font-size:15px;font-weight:500;margin-bottom:4px">${scored}/${totalQ} questions réussies</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:1rem">${pct>=75?'🎉 Excellent ! Vous êtes prêt pour l\'examen !':pct>=50?'📚 Bon travail, continuez à réviser.':'💪 Relisez les modules et réessayez !'}</div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn-go" onclick="startExamMode('pdf')">Recommencer</button>
+      <button class="btn-secondary" onclick="state.examStarted=false;renderContent()">Choisir le mode</button>
+    </div>
+  </div>` + html + `</div>`;
+
+  return html;
 }
 
 // ===== ACTIONS =====
@@ -2280,6 +2917,32 @@ function flipCard() { state.fcFlipped=!state.fcFlipped; renderContent(); }
 function nextFC() { if(state.fcIdx<FLASHCARDS.length-1){state.fcIdx++;state.fcFlipped=false;}else{state.fcIdx=0;state.fcFlipped=false;} renderContent(); }
 function prevFC() { if(state.fcIdx>0){state.fcIdx--;state.fcFlipped=false;renderContent();} }
 function startExam() { state.examStarted=true; state.quizIdx=0; state.quizAnswers=[]; state.quizDone=false; renderContent(); }
+
+function savePDFAnswer(idx, val) {
+  state.pdfAnswers[idx] = val;
+}
+function togglePDFCheckbox(idx, optIdx, checked) {
+  if (!state.pdfAnswers[idx]) state.pdfAnswers[idx] = [];
+  if (checked) { if (!state.pdfAnswers[idx].includes(optIdx)) state.pdfAnswers[idx].push(optIdx); }
+  else { state.pdfAnswers[idx] = state.pdfAnswers[idx].filter(x => x !== optIdx); }
+}
+function submitPDFExam() {
+  state.pdfSubmitted = true;
+  renderContent();
+  window.scrollTo(0,0);
+}
+function startExamMode(mode) {
+  state.examMode = mode;
+  state.examStarted = true;
+  state.quizIdx = 0;
+  state.quizAnswers = [];
+  state.quizDone = false;
+  state.pdfAnswers = {};
+  state.pdfSubmitted = false;
+  renderContent();
+  window.scrollTo(0,0);
+}
+
 function answerExam(i,total) { if(state.quizAnswers[state.quizIdx]===undefined){state.quizAnswers[state.quizIdx]=i;renderContent();}}
 function nextExam(total) { state.quizIdx++; renderContent(); }
 function finishExam() { state.quizDone=true; renderContent(); }

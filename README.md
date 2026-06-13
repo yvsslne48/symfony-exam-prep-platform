@@ -1,1 +1,0 @@
-# symfony-exam-prep-platform

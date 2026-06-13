@@ -1,0 +1,8 @@
+IMPORTANT: Pour éviter les problèmes de cache
+=============================================
+1. Supprimez l'ANCIEN dossier learnhub-react ENTIEREMENT
+2. Extrayez ce nouveau ZIP dans un NOUVEAU dossier
+3. Dans CMD (pas PowerShell):
+   cd C:\Users\LENOVO\Downloads\learnhub-NEW\learnhub
+   npm install
+   npm run dev

@@ -1,13 +1,14 @@
 import { symfony } from './courses/symfony'
 import { spring } from './courses/spring'
 import { dotnet } from './courses/dotnet'
+import { iaM } from './courses/iaM'
 
 // ─── ADD NEW COURSES HERE ───────────────────────────────────
 // import { react } from './react'
 // import { docker } from './docker'
 // import { typescript } from './typescript'
 
-export const COURSES = [symfony, spring, dotnet]
+export const COURSES = [symfony, spring, dotnet, iaM]
 
 export const getCourse = (id) => COURSES.find(c => c.id === id)
 export const getModule = (courseId, moduleId) => {

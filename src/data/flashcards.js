@@ -241,4 +241,62 @@ export const FLASHCARDS = [
   { course: 'dotnet', module: 'reporting', q: 'AddDataSource()', a: 'Méthode qui passe les données au rapport RDLC.' },
   { course: 'dotnet', module: 'reporting', q: 'Execute(RenderType.Pdf)', a: 'Génère le rapport au format PDF.' },
   { course: 'dotnet', module: 'reporting', q: 'ViewModel (Reporting)', a: 'Classe avec attributs primitifs uniquement, nécessaire car RDLC ne gère pas les objets imbriqués.' },
+,
+
+  // ═══════════════════════════════════════════════
+  //  INTELLIGENCE ARTIFICIELLE — ML
+  // ═══════════════════════════════════════════════
+
+  // ── numpy-pandas ──
+  { course: 'ia', module: 'numpy-pandas', q: 'NumPy vs Pandas', a: 'NumPy = tableaux numériques homogènes. Pandas = données tabulaires hétérogènes (construit sur NumPy).' },
+  { course: 'ia', module: 'numpy-pandas', q: 'head()', a: 'Affiche les premières lignes d\'un DataFrame (5 par défaut).' },
+  { course: 'ia', module: 'numpy-pandas', q: 'info()', a: 'Affiche colonnes, types de données et nombre de valeurs non-nulles (détecte les manquantes).' },
+  { course: 'ia', module: 'numpy-pandas', q: 'describe()', a: 'Statistiques descriptives : moyenne, écart-type, min, max, quartiles.' },
+  { course: 'ia', module: 'numpy-pandas', q: 'isnull().sum()', a: 'Compte les valeurs manquantes (NaN) par colonne.' },
+  { course: 'ia', module: 'numpy-pandas', q: 'fillna()', a: 'Remplace les valeurs manquantes (numérique → moyenne, catégoriel → valeur par défaut).' },
+  { course: 'ia', module: 'numpy-pandas', q: 'LabelEncoder', a: 'Convertit les variables catégorielles textuelles en nombres (obligatoire pour les modèles ML).' },
+  { course: 'ia', module: 'numpy-pandas', q: 'StandardScaler', a: 'Normalise les données : centre (moyenne ≈ 0) et réduit (écart-type ≈ 1).' },
+  { course: 'ia', module: 'numpy-pandas', q: 'ML Supervisé', a: 'Données étiquetées (y connu) — Classification et Régression. Ex: KNN, SVM, Régression Log.' },
+  { course: 'ia', module: 'numpy-pandas', q: 'ML Non Supervisé', a: 'Pas d\'étiquettes — Clustering. Le modèle découvre la structure seul. Ex: K-Means, DBSCAN.' },
+
+  // ── knn ──
+  { course: 'ia', module: 'knn', q: 'KNN', a: 'K-Nearest Neighbors — classification par vote majoritaire des K voisins les plus proches.' },
+  { course: 'ia', module: 'knn', q: 'Distance Euclidienne', a: 'd = √(Σ(xi−yi)²) — distance en ligne droite entre deux points.' },
+  { course: 'ia', module: 'knn', q: 'Exemple cours KNN — k=1', a: 'Fouad (37,16,2) : voisin le plus proche = Ali (d=11.2, Non) → Fouad = Non fidèle.' },
+  { course: 'ia', module: 'knn', q: 'Exemple cours KNN — k=3', a: 'Fouad (37,16,2) : Ali(Non)+Hassan(Oui)+Fadoua(Oui) → majorité Oui → Fouad = Fidèle.' },
+  { course: 'ia', module: 'knn', q: 'Accuracy', a: '(VP+VN)/(VP+VN+FP+FN) — proportion de prédictions correctes parmi toutes. Exemple cours : 90.9%' },
+  { course: 'ia', module: 'knn', q: 'Recall', a: 'VP/(VP+FN) — vrais positifs détectés parmi tous les cas réellement positifs. Exemple cours : 83.3%' },
+  { course: 'ia', module: 'knn', q: 'Précision', a: 'VP/(VP+FP) — prédictions positives réellement correctes. Exemple cours : 90.9%' },
+  { course: 'ia', module: 'knn', q: 'F1 Score', a: '2×(Précision×Recall)/(Précision+Recall) — moyenne harmonique. Exemple cours : 86.8%' },
+  { course: 'ia', module: 'knn', q: 'Matrice de confusion', a: '[[VP, FP], [FN, VN]] — VP=correct positif, VN=correct négatif, FP=fausse alarme, FN=raté.' },
+  { course: 'ia', module: 'knn', q: 'K impair (KNN)', a: 'Recommandé quand 2 classes — évite les ex-aequo lors du vote majoritaire.' },
+
+  // ── kmeans ──
+  { course: 'ia', module: 'kmeans', q: 'K-Means', a: 'Clustering non supervisé — regroupe les données en K clusters en minimisant le WCSS.' },
+  { course: 'ia', module: 'kmeans', q: 'WCSS', a: 'Within-Cluster Sum of Squares — somme des distances² entre chaque point et son centroïde.' },
+  { course: 'ia', module: 'kmeans', q: 'Centroïde', a: 'Centre géométrique d\'un cluster = moyenne de tous les points qui le composent.' },
+  { course: 'ia', module: 'kmeans', q: 'Méthode du Coude', a: 'Tracer WCSS=f(K), trouver le point d\'inflexion (coude) = K optimal.' },
+  { course: 'ia', module: 'kmeans', q: 'inertia_ (sklearn)', a: 'Attribut KMeans qui retourne le WCSS du modèle entraîné.' },
+  { course: 'ia', module: 'kmeans', q: 'kmeans.labels_', a: 'Tableau des clusters assignés à chaque point (0, 1, 2...).' },
+
+  // ── svm ──
+  { course: 'ia', module: 'svm', q: 'SVM', a: 'Support Vector Machine — classification supervisée par hyperplan à marge maximale.' },
+  { course: 'ia', module: 'svm', q: 'Hyperplan', a: 'Frontière de décision SVM — droite en 2D, plan en 3D, hyperplan en N dimensions.' },
+  { course: 'ia', module: 'svm', q: 'Vecteurs de support', a: 'Points les plus proches de l\'hyperplan, qui définissent la marge.' },
+  { course: 'ia', module: 'svm', q: 'kernel=\'rbf\'', a: 'Kernel SVM le plus utilisé — transforme dans un espace de dim supérieure pour données non linéaires.' },
+  { course: 'ia', module: 'svm', q: 'SVM cas idéaux', a: 'Haute dimensionnalité, marge claire entre classes, dataset de taille petite à moyenne.' },
+
+  // ── dbscan ──
+  { course: 'ia', module: 'dbscan', q: 'DBSCAN', a: 'Clustering basé sur la densité — découvre K automatiquement et gère le bruit (label -1).' },
+  { course: 'ia', module: 'dbscan', q: 'Label -1 (DBSCAN)', a: 'Point classé comme bruit/outlier — pas dans une zone assez dense.' },
+  { course: 'ia', module: 'dbscan', q: 'eps', a: 'Rayon du voisinage dans DBSCAN — distance maximale pour être "voisin".' },
+  { course: 'ia', module: 'dbscan', q: 'min_samples', a: 'Nombre minimum de voisins dans eps pour qu\'un point soit considéré comme "dense".' },
+  { course: 'ia', module: 'dbscan', q: 'Outlier vs bruit', a: 'Outlier = valeur extrême réelle. Bruit = erreur de mesure. DBSCAN isole les deux (label -1).' },
+
+  // ── regression-logistique ──
+  { course: 'ia', module: 'regression-logistique', q: 'Régression Logistique', a: 'Classification supervisée binaire — prédit une probabilité (0 à 1) via la fonction sigmoïde.' },
+  { course: 'ia', module: 'regression-logistique', q: 'predict_proba()', a: 'Retourne les probabilités d\'appartenir à chaque classe (contrairement à predict() qui retourne la classe).' },
+  { course: 'ia', module: 'regression-logistique', q: 'stratify=y', a: 'Option train_test_split — conserve les mêmes proportions de classes dans train et test.' },
+  { course: 'ia', module: 'regression-logistique', q: 'cross_val_score', a: 'Validation croisée — évalue le modèle sur K sous-ensembles pour une estimation plus robuste.' },
+  { course: 'ia', module: 'regression-logistique', q: 'Data Leakage', a: 'Fuite de données — normaliser AVANT split fait "fuir" les stats du test dans le train (à éviter).' },
 ]

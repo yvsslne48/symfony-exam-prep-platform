@@ -5,6 +5,7 @@ import { getCourse } from '@/data'
 import { SYMFONY_QCM, SYMFONY_PDF, SYMFONY_REAL_2026, SYMFONY_PLUS } from '@/data/exams'
 import { SPRING_QCM, SPRING_PDF, SPRING_REAL, SPRING_REAL_2027 } from '@/data/exams-spring'
 import { DOTNET_QCM, DOTNET_PLUS, DOTNET_REAL_IMAGE } from '@/data/exams-dotnet'
+import { IA_QCM, IA_REAL, IA_PLUS } from '@/data/exams-iaM'
 import { X } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -54,6 +55,15 @@ const EXAM_DATA = {
     pdfFile: null,
     realImage: DOTNET_REAL_IMAGE,
     realImageLabel: 'Examen Réel — MANI Mohammed Adil',
+  },
+  ia: {
+    qcm:  IA_QCM,
+    pdf:  null,
+    reel: [
+      { label: 'Examen Réel — Mouhib Imad', questions: IA_REAL },
+    ],
+    plus: IA_PLUS,
+    pdfFile: '/exams/examen-ia.pdf',
   }
 }
 
@@ -106,8 +116,8 @@ export default function ExamPage() {
   const reset = () => { setMode(null); setAnswers({}); setSubmitted(false); setQIdx(0); setQAns([]); setQDone(false) }
   const startMode = (m, opts={}) => { setMode(m); setAnswers({}); setSubmitted(false); setQIdx(0); setQAns([]); setQDone(false); if (opts.reelVersion!==undefined) setReelVersion(opts.reelVersion) }
 
-  const accentColor = courseId === 'spring' ? 'var(--teal)' : courseId === 'dotnet' ? '#7c3aed' : 'var(--purple)'
-  const accentLight = courseId === 'spring' ? '#2dd4a8' : courseId === 'dotnet' ? '#a78bfa' : '#a597ff'
+  const accentColor = courseId === 'spring' ? 'var(--teal)' : courseId === 'dotnet' ? '#7c3aed' : courseId === 'ia' ? '#f06060' : 'var(--purple)'
+  const accentLight = courseId === 'spring' ? '#2dd4a8' : courseId === 'dotnet' ? '#a78bfa' : courseId === 'ia' ? '#f59e8a' : '#a597ff'
 
   const hasReelText = data.reel && data.reel.length > 0
   const hasRealImage = !!data.realImage
